@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Test::Mocha;
 {
-  $Test::Mocha::VERSION = '0.11';
+  $Test::Mocha::VERSION = '0.12';
 }
 # ABSTRACT: Test Spy/Stub Framework
 
@@ -14,13 +14,15 @@ use aliased 'Test::Mocha::Verify';
 
 use Carp qw( croak );
 use Exporter qw( import );
-use Scalar::Util qw( looks_like_number );
 use Test::Mocha::Types 'NumRange', Mock => { -as => 'MockType' };
+use Test::Mocha::Util qw( get_attribute_value );
+use Types::Standard qw( Num );
 
 our @EXPORT = qw(
     mock
     stub
     verify
+    clear
 );
 our @EXPORT_OK = qw(
     inspect
@@ -67,15 +69,15 @@ sub verify {
 
     if (defined $options{times}) {
         croak "'times' option must be a number"
-            unless looks_like_number $options{times};
+            unless Num->check( $options{times} );
     }
     elsif (defined $options{at_least}) {
         croak "'at_least' option must be a number"
-            unless looks_like_number $options{at_least};
+            unless Num->check( $options{at_least} );
     }
     elsif (defined $options{at_most}) {
         croak "'at_most' option must be a number"
-            unless looks_like_number $options{at_most};
+            unless Num->check( $options{at_most} );
     }
     elsif (defined $options{between}) {
         croak "'between' option must be an arrayref "
@@ -94,7 +96,21 @@ sub verify {
 }
 
 
+sub clear {
+    my ($mock) = @_;
+
+    croak 'clear() must be given a mock object'
+        unless defined $mock && MockType->check($mock);
+
+    my $calls = get_attribute_value($mock, 'calls');
+    @$calls = ();
+
+    return;
+}
+
+
 sub inspect {
+    # uncoverable pod
     my ($mock) = @_;
 
     croak 'inspect() must be given a mock object'
@@ -115,7 +131,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.11
+version 0.12
 
 =head1 SYNOPSIS
 
@@ -124,10 +140,13 @@ other objects.
 
     use Test::More tests => 2;
     use Test::Mocha;
+    use Types::Standard qw( Int );
 
-    # set up the mock, and stub method calls
+    # create the mock
     my $warehouse = mock;
-    stub($warehouse)->has_inventory($item1, 50)->returns(1);
+
+    # stub method calls (with type constraint for matching argument)
+    stub($warehouse)->has_inventory($item1, Int)->returns(1);
 
     # execute the code under test
     my $order = Order->new(item => $item1, quantity => 50);
@@ -189,7 +208,8 @@ raise an exception.
     is_deeply( [ $mock->method_that_returns(@args) ], [ 1, 2, 3 ] );
     ok( exception { $mock->method_that_dies(@args) } );
 
-The stub applies to the exact method and arguments specified.
+The stub applies to the exact method and arguments specified. (But see also
+L</"ARGUMENT MATCHING"> for a shortcut around this.)
 
     stub($list)->get(0)->returns('first');
     stub($list)->get(1)->returns('second');
@@ -219,12 +239,14 @@ You may chain responses together to provide a series of responses.
 
     verify($mock, [%option], [$test_name])->method(@args)
 
-C<verify()> is used to test the interactions with the mock object. C<verify()>
-plays nicely with L<Test::Simple> and Co - it will print the test result along
-with your other tests and calls to C<verify()> are counted in the test plan.
+C<verify()> is used to test the interactions with the mock object. You can use
+it to verify that the correct methods were called, with the correct set of
+arguments, and the correct number of times. C<verify()> plays nicely with
+L<Test::Simple> and Co - it will print the test result along with your other
+tests and calls to C<verify()> are counted in the test plan.
 
     verify($warehouse)->remove($item, 50);
-    # prints: ok 1 - remove("coffee", 50) was called 1 time(s)
+    # prints: ok 1 - remove("book", 50) was called 1 time(s)
 
 An option may be specified to constrain the test.
 
@@ -235,22 +257,22 @@ An option may be specified to constrain the test.
 
 =over 4
 
-=item times
+=item C<times>
 
 Specifies the number of times the given method is expected to be called. The
 default is 1 if no other option is specified.
 
-=item at_least
+=item C<at_least>
 
 Specifies the minimum number of times the given method is expected to be
 called.
 
-=item at_most
+=item C<at_most>
 
 Specifies the maximum number of times the given method is expected to be
 called.
 
-=item between
+=item C<between>
 
 Specifies the minimum and maximum number of times the given method is expected
 to be called.
@@ -260,14 +282,88 @@ to be called.
 An optional C<$test_name> may be specified to be printed instead of the
 default.
 
-    verify( $warehouse, 'inventory removed')->remove_inventory($item, 50);
+    verify( $warehouse, 'inventory removed' )->remove_inventory($item, 50);
     # prints: ok 1 - inventory removed
 
-    verify( $warehouse, times => 0, 'inventory not removed')
+    verify( $warehouse, times => 0, 'inventory not removed' )
         ->remove_inventory($item, 50);
     # prints: ok 2 - inventory not removed
 
+=head2 clear
+
+    clear($mock)
+
+Clears the method call history. Note that this does not affect the stubbed
+methods.
+
 =for Pod::Coverage inspect
+
+=head1 ARGUMENT MATCHING
+
+=head2 Predefined types
+
+When specifying method calls using C<stub()> or C<verify()>, you may use
+type constraints to match the arguments rather than specifying the exact
+arguments. You may use any L<Type::Tiny> type constraint such as those
+predefined in L<Types::Standard>. (Moose type constraints such as
+L<MooseX::Types::Moose> and L<MooseX::Types::Structured> will also work.)
+
+    use Types::Standard qw( Defined );
+
+    my $mock = mock;
+    stub($mock)->foo(Defined)->returns('ok');
+
+    print $mock->foo(1);        # prints: ok
+    print $mock->foo('string'); # prints: ok
+
+    verify($mock, times => 2)->foo(Defined);
+    # prints: ok 1 - foo(Defined) was called 2 time(s)
+
+You may use the normal features of type constraints: parameterized and
+structured types, and type unions, intersections and negations (but there's no
+need to use coercions).
+
+    use Types::Standard qw( Any ArrayRef Int Str StrMatch );
+
+    my $list = mock;
+    $list->set(1, [1,2]);
+    $list->set(0, 'foobar');
+
+    # type negation
+    # prints: ok 1 - set(Int, ~Int) was called 2 time(s)
+    verify($list, times => 2)->set( Int, ~Int );
+
+    # type union
+    # prints: ok 2 - set(Int, ArrayRef|Str) was called 2 time(s)
+    verify($list, times => 2)->set( Int, ArrayRef|Str );
+
+    # parameterized type
+    # prints: ok 3 - set(Int, StrMatch[(?^:^foo)]) was called 1 time(s)
+    verify($list)->set( Int, StrMatch[qr/^foo/] );
+
+=head2 Self-defined types
+
+You may also use your own type constraints, defined using L<Type::Utils>.
+
+    use Type::Utils -all;
+
+    # naming the type means it will be printed nicely in the verify() output
+    my $positive_int = declare 'PositiveInt', as Int, where { $_ > 0 };
+
+    # prints: ok 4 - set(PositiveInt, Any) was called 1 time(s)
+    verify($list)->set( $positive_int, Any );
+
+=head2 Argument slurping
+
+You may use the L<C<slurpy()>|Types::Standard/Structured> function if you just
+want to match all arguments generally. Note that slurpy types will match on
+empty argument lists also.
+
+    # prints: ok 5 - set({ slurpy: ArrayRef }) was called 2 time(s)
+    verify($list)->set( slurpy ArrayRef );
+
+    # prints: ok 6 - set({ slurpy: HashRef }) was called 2 time(s)
+    verify($list)->set( slurpy HashRef );
 
 =head1 TO DO
 
@@ -275,15 +371,11 @@ default.
 
 =item *
 
-Rethink Matchers
-
-=item *
-
 Ordered verifications
 
 =item *
 
-Function to clear interaction history
+Stubs with callbacks
 
 =back
 
@@ -306,8 +398,8 @@ Steven Lee <stevenwh.lee@gmail.com>
 This module is a fork from L<Test::Magpie> originally written by Oliver
 Charles (CYCLES).
 
-It is inspired by L<Mockito|http://code.google.com/p/mockito/> for Java and
-Python by Szczepan Faber.
+It is inspired by the popular L<Mockito|http://code.google.com/p/mockito/> for
+Java and Python by Szczepan Faber.
 
 =head1 SEE ALSO
 

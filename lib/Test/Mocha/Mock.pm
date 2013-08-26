@@ -1,23 +1,25 @@
 package Test::Mocha::Mock;
 {
-  $Test::Mocha::Mock::VERSION = '0.11';
+  $Test::Mocha::Mock::VERSION = '0.12';
 }
 # ABSTRACT: Mock objects
 
 use Moose;
 use namespace::autoclean;
 
+use Carp qw( croak );
+
 use aliased 'Test::Mocha::Invocation';
 use aliased 'Test::Mocha::Stub';
 
+use Test::Mocha::Types qw( Matcher );
 use Test::Mocha::Util qw(
     extract_method_name
     get_attribute_value
     has_caller_package
 );
 
-use MooseX::Types::Moose qw( ArrayRef Int Str );
-use MooseX::Types::Structured qw( Map );
+use Types::Standard qw( ArrayRef InstanceOf Int Map Str );
 use UNIVERSAL::ref;
 
 our $AUTOLOAD;
@@ -38,7 +40,7 @@ has 'class' => (
 # to be used for verification.
 
 has 'calls' => (
-    isa => ArrayRef[Invocation],
+    isa => ArrayRef[InstanceOf[Invocation]],
     is => 'bare',
     default => sub { [] }
 );
@@ -49,7 +51,7 @@ has 'calls' => (
 # determine which stub to dispatch to.
 
 has 'stubs' => (
-    isa => Map[ Str, ArrayRef[Stub] ],
+    isa => Map[ Str, ArrayRef[InstanceOf[Stub]] ],
     is => 'bare',
     default => sub { {} }
 );
@@ -57,6 +59,11 @@ has 'stubs' => (
 sub AUTOLOAD {
     my $self = shift;
     my $method_name = extract_method_name($AUTOLOAD);
+
+    my @invalid_args = grep { Matcher->check($_) } @_;
+    croak 'Mock methods may not be called with '
+        . 'type constraint arguments: ' . join(', ', @invalid_args)
+        unless @invalid_args == 0;
 
     # record the method call for verification
     my $method_call = Invocation->new(
@@ -84,7 +91,13 @@ sub AUTOLOAD {
 # is required.
 
 sub isa {
-    return if has_caller_package('UNIVERSAL::ref');
+    # uncoverable pod
+    my ($self, $package) = @_;
+    return if (
+        $package eq 'Type::Tiny'                  ||
+        $package eq 'Moose::Meta::TypeConstraint' ||
+        has_caller_package('UNIVERSAL::ref')
+    );
     return 1;
 }
 
@@ -102,6 +115,7 @@ sub does {
 # object to C<can()> do any method that is required.
 
 sub can {
+    # uncoverable pod
     my ($self, $method_name) = @_;
     return sub {
         $AUTOLOAD = $method_name;

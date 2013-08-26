@@ -1,6 +1,6 @@
 package Test::Mocha::Inspect;
 {
-  $Test::Mocha::Inspect::VERSION = '0.11';
+  $Test::Mocha::Inspect::VERSION = '0.12';
 }
 # ABSTRACT: Inspect method calls on mock objects
 

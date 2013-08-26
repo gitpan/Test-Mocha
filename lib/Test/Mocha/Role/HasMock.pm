@@ -1,6 +1,6 @@
 package Test::Mocha::Role::HasMock;
 {
-  $Test::Mocha::Role::HasMock::VERSION = '0.11';
+  $Test::Mocha::Role::HasMock::VERSION = '0.12';
 }
 # ABSTRACT: A role for objects that wrap around a mock
 

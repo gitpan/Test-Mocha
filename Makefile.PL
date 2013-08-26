@@ -27,28 +27,30 @@ my %WriteMakefileArgs = (
     "Moose" => 0,
     "Moose::Role" => 0,
     "Moose::Util" => 0,
-    "MooseX::Types" => 0,
-    "MooseX::Types::Moose" => 0,
-    "MooseX::Types::Structured" => 0,
     "Scalar::Util" => 0,
-    "Set::Object" => 0,
     "Test::Builder" => 0,
+    "Type::Library" => 0,
+    "Type::Utils" => 0,
+    "Types::Standard" => 0,
     "UNIVERSAL::ref" => 0,
     "aliased" => 0,
     "experimental" => 0,
     "namespace::autoclean" => 0,
-    "overload" => 0,
     "strict" => 0,
     "warnings" => 0
   },
   "TEST_REQUIRES" => {
     "Exception::Tiny" => 0,
+    "Moose::Util::TypeConstraints" => 0,
+    "MooseX::Types::Moose" => 0,
+    "MooseX::Types::Structured" => 0,
     "Test::Builder::Tester" => 0,
     "Test::Fatal" => 0,
     "Test::More" => 0,
-    "constant" => 0
+    "constant" => 0,
+    "overload" => 0
   },
-  "VERSION" => "0.11",
+  "VERSION" => "0.12",
   "test" => {
     "TESTS" => "t/*.t"
   }

@@ -1,6 +1,6 @@
 package Test::Mocha::Stub;
 {
-  $Test::Mocha::Stub::VERSION = '0.11';
+  $Test::Mocha::Stub::VERSION = '0.12';
 }
 # ABSTRACT: The declaration of a stubbed method
 
@@ -18,8 +18,8 @@ use Moose;
 use namespace::autoclean;
 
 use Carp qw( croak );
-use MooseX::Types::Moose qw( ArrayRef );
 use Scalar::Util qw( blessed );
+use Types::Standard qw( ArrayRef );
 
 with 'Test::Mocha::Role::MethodCall';
 
@@ -39,6 +39,7 @@ has '_executions' => (
 # execution queue.
 
 sub returns {
+    # uncoverable pod
     my ($self, @return_values) = @_;
 
     push @{$self->_executions}, sub {
@@ -55,6 +56,7 @@ sub returns {
 # the execution queue.
 
 sub dies {
+    # uncoverable pod
     my ($self, $exception) = @_;
 
     push @{$self->_executions}, sub {
@@ -69,6 +71,7 @@ sub dies {
 # Executes the next execution
 
 sub execute {
+    # uncoverable pod
     my ($self) = @_;
     my $executions = $self->_executions;
 

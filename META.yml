@@ -4,10 +4,14 @@ author:
   - 'Steven Lee <stevenwh.lee@gmail.com>'
 build_requires:
   Exception::Tiny: 0
+  Moose::Util::TypeConstraints: 0
+  MooseX::Types::Moose: 0
+  MooseX::Types::Structured: 0
   Test::Builder::Tester: 0
   Test::Fatal: 0
   Test::More: 0
   constant: 0
+  overload: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
@@ -19,23 +23,8 @@ meta-spec:
 name: Test-Mocha
 no_index:
   namespace:
-    - Test::Mocha::Role
-  package:
-    - Test::Mocha::Inspect
-    - Test::Mocha::Invocation
-    - Test::Mocha::Mock
-    - Test::Mocha::Stub
-    - Test::Mocha::Stubber
-    - Test::Mocha::Types
-    - Test::Mocha::Util
-    - Test::Mocha::Verify
-provides:
-  Test::Mocha:
-    file: lib/Test/Mocha.pm
-    version: 0.11
-  Test::Mocha::Matcher:
-    file: lib/Test/Mocha/Matcher.pm
-    version: 0.11
+    - Test::Mocha
+provides: {}
 requires:
   Carp: 0
   Devel::PartialDump: 0
@@ -44,24 +33,22 @@ requires:
   Moose: 0
   Moose::Role: 0
   Moose::Util: 0
-  MooseX::Types: 0
-  MooseX::Types::Moose: 0
-  MooseX::Types::Structured: 0
   Scalar::Util: 0
-  Set::Object: 0
   Test::Builder: 0
+  Type::Library: 0
+  Type::Utils: 0
+  Types::Standard: 0
   UNIVERSAL::ref: 0
   aliased: 0
   experimental: 0
   namespace::autoclean: 0
-  overload: 0
   perl: 5.010001
   strict: 0
   warnings: 0
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Test-Mocha
   repository: http://github.com/stevenl/Test-Mocha.git
-version: 0.11
+version: 0.12
 x_Dist_Zilla:
   perl:
     version: 5.018000
