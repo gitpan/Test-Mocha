@@ -1,6 +1,6 @@
 package Test::Mocha::Invocation;
 {
-  $Test::Mocha::Invocation::VERSION = '0.12';
+  $Test::Mocha::Invocation::VERSION = '0.13';
 }
 # ABSTRACT: Represents a method call
 

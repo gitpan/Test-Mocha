@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Test::Mocha;
 {
-  $Test::Mocha::VERSION = '0.12';
+  $Test::Mocha::VERSION = '0.13';
 }
 # ABSTRACT: Test Spy/Stub Framework
 
@@ -131,7 +131,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.12
+version 0.13
 
 =head1 SYNOPSIS
 
@@ -308,10 +308,10 @@ arguments. You may use any L<Type::Tiny> type constraint such as those
 predefined in L<Types::Standard>. (Moose type constraints such as
 L<MooseX::Types::Moose> and L<MooseX::Types::Structured> will also work.)
 
-    use Types::Standard qw( Defined );
+    use Types::Standard qw( Any );
 
     my $mock = mock;
-    stub($mock)->foo(Defined)->returns('ok');
+    stub($mock)->foo(Any)->returns('ok');
 
     print $mock->foo(1);        # prints: ok
     print $mock->foo('string'); # prints: ok

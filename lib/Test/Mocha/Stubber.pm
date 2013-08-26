@@ -1,6 +1,6 @@
 package Test::Mocha::Stubber;
 {
-  $Test::Mocha::Stubber::VERSION = '0.12';
+  $Test::Mocha::Stubber::VERSION = '0.13';
 }
 # ABSTRACT: Create methods stubs for mock objects
 

@@ -1,6 +1,6 @@
 package Test::Mocha::Util;
 {
-  $Test::Mocha::Util::VERSION = '0.12';
+  $Test::Mocha::Util::VERSION = '0.13';
 }
 # ABSTRACT: Internal utility functions for Test::Mocha
 

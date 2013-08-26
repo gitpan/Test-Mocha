@@ -1,6 +1,6 @@
 package Test::Mocha::Stub;
 {
-  $Test::Mocha::Stub::VERSION = '0.12';
+  $Test::Mocha::Stub::VERSION = '0.13';
 }
 # ABSTRACT: The declaration of a stubbed method
 

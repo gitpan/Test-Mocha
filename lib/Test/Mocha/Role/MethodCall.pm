@@ -1,6 +1,6 @@
 package Test::Mocha::Role::MethodCall;
 {
-  $Test::Mocha::Role::MethodCall::VERSION = '0.12';
+  $Test::Mocha::Role::MethodCall::VERSION = '0.13';
 }
 # ABSTRACT: A role that represents a method call
 

@@ -1,6 +1,6 @@
 package Test::Mocha::Verify;
 {
-  $Test::Mocha::Verify::VERSION = '0.12';
+  $Test::Mocha::Verify::VERSION = '0.13';
 }
 # ABSTRACT: Verify interactions with a mock object by looking into its invocation history
 
