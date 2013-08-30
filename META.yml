@@ -11,7 +11,6 @@ build_requires:
   Test::Fatal: 0
   Test::More: 0
   constant: 0
-  overload: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
@@ -27,31 +26,26 @@ no_index:
 provides:
   Test::Mocha:
     file: lib/Test/Mocha.pm
-    version: 0.13
+    version: 0.14
 requires:
   Carp: 0
   Devel::PartialDump: 0
   Exporter: 0
-  List::Util: 0
-  Moose: 0
-  Moose::Role: 0
-  Moose::Util: 0
   Scalar::Util: 0
   Test::Builder: 0
   Type::Library: 0
   Type::Utils: 0
   Types::Standard: 0
   UNIVERSAL::ref: 0
-  aliased: 0
   experimental: 0
-  namespace::autoclean: 0
+  overload: 0
   perl: 5.010001
   strict: 0
   warnings: 0
 resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Test-Mocha
   repository: http://github.com/stevenl/Test-Mocha.git
-version: 0.13
+version: 0.14
 x_Dist_Zilla:
   perl:
     version: 5.018000

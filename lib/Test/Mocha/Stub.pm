@@ -1,91 +1,63 @@
 package Test::Mocha::Stub;
 {
-  $Test::Mocha::Stub::VERSION = '0.13';
+  $Test::Mocha::Stub::VERSION = '0.14';
 }
-# ABSTRACT: The declaration of a stubbed method
+# ABSTRACT: Create methods stubs for mock objects
 
-# Represents a stub method - a method that may have some sort of action when
-# called. Stub methods are created by invoking the method name (with a set of
-# possible argument matchers/arguments) on the object returned by C<when> in
-# L<Test::Mocha>.
-#
-# Stub methods have a stack of executions. Every time the stub method is called
-# (matching arguments), the next execution is taken from the front of the queue
-# and called. As stubs are matched via arguments, you may have multiple stubs
-# for the same method name.
-
-use Moose;
-use namespace::autoclean;
+use strict;
+use warnings;
 
 use Carp qw( croak );
-use Scalar::Util qw( blessed );
-use Types::Standard qw( ArrayRef );
+use Test::Mocha::StubbedCall;
+use Test::Mocha::Types qw( Mock Slurpy );
+use Test::Mocha::Util qw( extract_method_name get_attribute_value );
+use Types::Standard qw( ArrayRef HashRef );
 
-with 'Test::Mocha::Role::MethodCall';
+our $AUTOLOAD;
 
-# croak() messages should not trace back to Mocha modules
-# to facilitate debugging of user test scripts
-our @CARP_NOT = qw( Test::Mocha::Mock );
-
-has '_executions' => (
-    isa     => ArrayRef,
-    is      => 'ro',
-    default => sub { [] },
-);
-
-# returns(@return_values)
-#
-# Pushes a stub method that will return the given values to the end of the
-# execution queue.
-
-sub returns {
+sub new {
     # uncoverable pod
-    my ($self, @return_values) = @_;
-
-    push @{$self->_executions}, sub {
-        return wantarray || @return_values > 1
-            ? @return_values
-            : $return_values[0];
-    };
-    return $self;
+    my ($class, %args) = @_;
+    ### assert: defined $args{mock} && Mock->check( $args{mock} )
+    return bless \%args, $class;
 }
 
-# dies($exception)
-#
-# Pushes a stub method that will throw C<$exception> when called to the end of
-# the execution queue.
+sub AUTOLOAD {
+    my ($self, @args) = @_;
+    my $method_name = extract_method_name($AUTOLOAD);
 
-sub dies {
-    # uncoverable pod
-    my ($self, $exception) = @_;
+    my $i = 0;
+    my $seen_slurpy;
+    foreach (@args) {
+        if (Slurpy->check($_)) {
+            $seen_slurpy = 1;
+            last;
+        }
+        $i++;
+    }
+    croak 'No arguments allowed after a slurpy type constraint'
+        if $i < $#args;
 
-    push @{$self->_executions}, sub {
-        $exception->throw
-            if blessed($exception) && $exception->can('throw');
+    if ($seen_slurpy) {
+        my $slurpy = $args[$i]->{slurpy};
+        croak 'Slurpy argument must be a type of ArrayRef or HashRef'
+            unless $slurpy->is_a_type_of(ArrayRef)
+                || $slurpy->is_a_type_of(HashRef);
+    }
 
-        croak $exception;
-    };
-    return $self;
+    my $stub = Test::Mocha::StubbedCall->new(
+        name => $method_name,
+        args => \@args,
+    );
+
+    my $mock  = get_attribute_value($self, 'mock');
+    my $stubs = get_attribute_value($mock, 'stubs');
+
+    # add new stub to front of queue so that it takes precedence
+    # over existing stubs that would satisfy the same invocations
+    unshift @{ $stubs->{$method_name} }, $stub;
+
+    return $stub;
 }
 
-# Executes the next execution
-
-sub execute {
-    # uncoverable pod
-    my ($self) = @_;
-    my $executions = $self->_executions;
-
-    # return undef by default
-    return if @$executions == 0;
-
-    # use the execution at the front of the queue and
-    # shift it off the queue - unless it is the last one
-    my $execution = @$executions > 1
-        ? shift(@$executions)
-        : $executions->[0];
-
-    return $execution->();
-}
-
-__PACKAGE__->meta->make_immutable;
 1;

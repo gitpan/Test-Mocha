@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 33;
+use Test::More tests => 14;
 use Test::Builder::Tester;
 use Test::Fatal;
 
@@ -19,20 +19,6 @@ $mock->set(+1, 'not an int');
 $mock->set(-1, 'negative');
 $mock->set( [qw( foo bar )] );
 
-my $e = exception { $mock->foo(1, Int) };
-like $e, qr/Int/,
-    'mock does not accept method call with type constraint argument';
-like $e, qr/matcher_typetiny\.t/, ' and message traces back to this script';
-
-is $mock->foo(1, mock), undef, 'mock as method argument not isa(Type::Tiny)';
-
-stub($mock)->set(Any)->returns('any');
-is $mock->set(1), 'any', 'stub() accepts type constraints';
-
-test_out 'ok 1 - set(Int) was called 1 time(s)';
-verify($mock)->set(Int);
-test_test 'verify() accepts type constraints';
-
 test_out 'ok 1 - set(StrMatch[(?^:^foo)]) was called 2 time(s)';
 verify($mock, times => 2)->set( StrMatch[qr/^foo/] );
 test_test 'parameterized type works';
@@ -41,13 +27,13 @@ test_out 'ok 1 - set(Int, ~Int) was called 2 time(s)';
 verify($mock, times => 2)->set(Int, ~Int);
 test_test 'type negation works';
 
-test_out 'ok 1 - set(Int|Str) was called 3 time(s)';
-verify($mock, times => 3)->set( Int | Str );
+test_out 'ok 1 - set(Int|Str) was called 2 time(s)';
+verify($mock, times => 2)->set( Int | Str );
 test_test 'type union works';
 
 test_out
-'ok 1 - set(StrMatch[(?^:^foo)]&StrMatch[(?^:bar$)]) was called 1 time(s)';
-verify($mock)->set(StrMatch[qr/^foo/] & StrMatch[qr/bar$/]);
+qr/ok 1 - set\(StrMatch\[\(\?.*\:\^foo\)\]\&StrMatch\[\(\?.*\:bar\$\)\]\) was called 1 time\(s\)\s/;
+verify($mock)->set( StrMatch[qr/^foo/] & StrMatch[qr/bar$/] );
 test_test 'type intersection works';
 
 test_out 'ok 1 - set(Tuple[Str,Str]) was called 1 time(s)';
@@ -62,8 +48,8 @@ test_test 'self-defined type constraint works';
 # -----------------------
 # slurpy type constraints
 
-test_out 'ok 1 - set({ slurpy: ArrayRef }) was called 6 time(s)';
-verify($mock, times => 6)->set( slurpy ArrayRef );
+test_out 'ok 1 - set({ slurpy: ArrayRef }) was called 5 time(s)';
+verify($mock, times => 5)->set( slurpy ArrayRef );
 test_test 'slurpy ArrayRef works';
 
 test_out 'ok 1 - set({ slurpy: Tuple[Defined,Defined] }) was called 2 time(s)';
@@ -82,26 +68,6 @@ test_out 'ok 1 - set({ slurpy: Map[PositiveInt,Str] }) was called 1 time(s)';
 verify($mock, times => 1)->set( slurpy Map[$positive_int, Str] );
 test_test 'slurpy Map works';
 
-$e = exception { verify($mock)->set( slurpy(ArrayRef), 1 ) };
-ok $e, 'Disallow arguments after a slurpy type constraint for verify()';
-like $e, qr/matcher_typetiny\.t/, ' and message traces back to this script';
-
-$e = exception { verify($mock)->set( slurpy Str) };
-ok $e, 'Invalid Slurpy argument for verify()';
-like $e, qr/matcher_typetiny\.t/, ' and message traces back to this script';
-
-# satisfy test coverage
-isa_ok stub($mock)->set( slurpy ArrayRef ), 'Test::Mocha::Stub';
-isa_ok stub($mock)->set( slurpy HashRef ),  'Test::Mocha::Stub';
-
-$e = exception { stub($mock)->set( slurpy(ArrayRef), 1 ) };
-ok $e, 'Disallow arguments after a slurpy type constraint for stub()';
-like $e, qr/matcher_typetiny\.t/, ' and message traces back to this script';
-
-$e = exception { stub($mock)->set( slurpy Str) };
-ok $e, 'Invalid Slurpy argument for stub()';
-like $e, qr/matcher_typetiny\.t/, ' and message traces back to this script';
-
 # slurpy matches with empty argument list
 $mock->bar();
 test_out 'ok 1 - bar({ slurpy: ArrayRef }) was called 1 time(s)';
@@ -111,14 +77,6 @@ test_test 'slurpy ArrayRef matches no arguments';
 test_out 'ok 1 - bar({ slurpy: HashRef }) was called 1 time(s)';
 verify($mock)->bar( slurpy HashRef );
 test_test 'slurpy HashRef matches no arguments';
-
-$e = exception { verify($mock)->bar( slurpy(ArrayRef), 1 ) };
-ok $e, 'Disallow arguments after a slurpy type constraint for verify()';
-like $e, qr/matcher_typetiny\.t/, ' and message traces back to this script';
-
-$e = exception { verify($mock)->bar( slurpy Str) };
-ok $e, 'Invalid Slurpy argument for verify()';
-like $e, qr/matcher_typetiny\.t/, ' and message traces back to this script';
 
 # -----------------------
 # undef edge cases

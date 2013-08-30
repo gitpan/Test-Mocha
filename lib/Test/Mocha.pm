@@ -2,42 +2,39 @@ use strict;
 use warnings;
 package Test::Mocha;
 {
-  $Test::Mocha::VERSION = '0.13';
+  $Test::Mocha::VERSION = '0.14';
 }
 # ABSTRACT: Test Spy/Stub Framework
 
 
-use aliased 'Test::Mocha::Inspect';
-use aliased 'Test::Mocha::Mock';
-use aliased 'Test::Mocha::Stubber';
-use aliased 'Test::Mocha::Verify';
-
 use Carp qw( croak );
 use Exporter qw( import );
+use Test::Mocha::Inspect;
+use Test::Mocha::Mock;
+use Test::Mocha::Stub;
 use Test::Mocha::Types 'NumRange', Mock => { -as => 'MockType' };
 use Test::Mocha::Util qw( get_attribute_value );
+use Test::Mocha::Verify;
 use Types::Standard qw( Num );
 
 our @EXPORT = qw(
     mock
     stub
     verify
-    clear
-);
-our @EXPORT_OK = qw(
     inspect
+    clear
 );
 
 
 sub mock {
-    return Mock->new if @_ == 0;
+    return Test::Mocha::Mock->new if @_ == 0;
 
     my ($class) = @_;
 
     croak 'The argument for mock() must be a string'
         unless !ref $class;
 
-    return Mock->new(class => $class);
+    return Test::Mocha::Mock->new(class => $class);
 }
 
 
@@ -47,7 +44,7 @@ sub stub {
     croak 'stub() must be given a mock object'
         unless defined $mock && MockType->check($mock);
 
-    return Stubber->new(mock => $mock);
+    return Test::Mocha::Stub->new(mock => $mock);
 }
 
 
@@ -92,7 +89,17 @@ sub verify {
     # set test name if given
     $options{test_name} = $test_name if defined $test_name;
 
-    return Verify->new(mock => $mock, %options);
+    return Test::Mocha::Verify->new(mock => $mock, %options);
+}
+
+
+sub inspect {
+    my ($mock) = @_;
+
+    croak 'inspect() must be given a mock object'
+        unless defined $mock && MockType->check($mock);
+
+    return Test::Mocha::Inspect->new(mock => $mock);
 }
 
 
@@ -108,17 +115,6 @@ sub clear {
     return;
 }
 
-
-sub inspect {
-    # uncoverable pod
-    my ($mock) = @_;
-
-    croak 'inspect() must be given a mock object'
-        unless defined $mock && MockType->check($mock);
-
-    return Inspect->new(mock => $mock);
-}
-
 1;
 
 __END__
@@ -131,7 +127,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.13
+version 0.14
 
 =head1 SYNOPSIS
 
@@ -289,6 +285,22 @@ default.
         ->remove_inventory($item, 50);
     # prints: ok 2 - inventory not removed
 
+=head2 inspect
+
+C<inspect()> returns a list of method calls matching the given method call
+specification. It can be useful for debugging failed C<verify()> calls. It may
+also be used in place of a complex C<verify()> call to break it down into
+smaller tests.
+
+    my @method_calls = inspect($warehouse)->remove_inventory(Str, Int);
+
+Each method call object has a C<name> and an C<args> property, and it
+is C<string> overloaded.
+
+    is( $method_call->name, 'remove_inventory',       'method name' );
+    is_deeply( [$method_call->args], ['book', 50],    'method args array' );
+    is( $method_call, 'remove_inventory("book", 50)', 'method as string' );
+
 =head2 clear
 
     clear($mock)
@@ -296,17 +308,18 @@ default.
 Clears the method call history. Note that this does not affect the stubbed
 methods.
 
-=for Pod::Coverage inspect
-
 =head1 ARGUMENT MATCHING
+
+Argument matchers may be used with C<stub()>, C<verify()> or C<inspect>.
+They are type constraints that are used to match method arguments. They save
+you from having to specify the exact arguments. This is a powerful feature
+that will save you time when writing your stubs and verifications.
 
 =head2 Predefined types
 
-When specifying method calls using C<stub()> or C<verify()>, you may use
-type constraints to match the arguments rather than specifying the exact
-arguments. You may use any L<Type::Tiny> type constraint such as those
-predefined in L<Types::Standard>. (Moose type constraints such as
-L<MooseX::Types::Moose> and L<MooseX::Types::Structured> will also work.)
+You may use any L<Type::Tiny> type constraint such as those predefined in
+L<Types::Standard>. (Moose type constraints such as L<MooseX::Types::Moose>
+and L<MooseX::Types::Structured> will also work.)
 
     use Types::Standard qw( Any );
 
@@ -323,22 +336,14 @@ You may use the normal features of type constraints: parameterized and
 structured types, and type unions, intersections and negations (but there's no
 need to use coercions).
 
-    use Types::Standard qw( Any ArrayRef Int Str StrMatch );
+    use Types::Standard qw( Any ArrayRef HashRef Int StrMatch );
 
     my $list = mock;
     $list->set(1, [1,2]);
     $list->set(0, 'foobar');
 
-    # type negation
-    # prints: ok 1 - set(Int, ~Int) was called 2 time(s)
-    verify($list, times => 2)->set( Int, ~Int );
-
-    # type union
-    # prints: ok 2 - set(Int, ArrayRef|Str) was called 2 time(s)
-    verify($list, times => 2)->set( Int, ArrayRef|Str );
-
     # parameterized type
-    # prints: ok 3 - set(Int, StrMatch[(?^:^foo)]) was called 1 time(s)
+    # prints: ok 1 - set(Int, StrMatch[(?^:^foo)]) was called 1 time(s)
     verify($list)->set( Int, StrMatch[qr/^foo/] );
 
 =head2 Self-defined types
@@ -350,19 +355,20 @@ You may also use your own type constraints, defined using L<Type::Utils>.
     # naming the type means it will be printed nicely in the verify() output
     my $positive_int = declare 'PositiveInt', as Int, where { $_ > 0 };
 
-    # prints: ok 4 - set(PositiveInt, Any) was called 1 time(s)
+    # prints: ok 2 - set(PositiveInt, Any) was called 1 time(s)
     verify($list)->set( $positive_int, Any );
 
 =head2 Argument slurping
 
-You may use the L<C<slurpy()>|Types::Standard/Structured> function if you just
-want to match all arguments generally. Note that slurpy types will match on
-empty argument lists also.
+You may use the L<C<slurpy()>|Types::Standard/Structured> function if you
+don't care what are arguments are used. They will just slurp up the remaining
+arguments as though they match. Note that empty argument lists are also
+recognised by slurpy types.
 
-    # prints: ok 5 - set({ slurpy: ArrayRef }) was called 2 time(s)
+    # prints: ok 3 - set({ slurpy: ArrayRef }) was called 2 time(s)
     verify($list)->set( slurpy ArrayRef );
 
-    # prints: ok 6 - set({ slurpy: HashRef }) was called 2 time(s)
+    # prints: ok 4 - set({ slurpy: HashRef }) was called 2 time(s)
     verify($list)->set( slurpy HashRef );
 
 =head1 TO DO

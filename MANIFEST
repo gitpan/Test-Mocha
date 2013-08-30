@@ -8,12 +8,10 @@ README
 dist.ini
 lib/Test/Mocha.pm
 lib/Test/Mocha/Inspect.pm
-lib/Test/Mocha/Invocation.pm
+lib/Test/Mocha/MethodCall.pm
 lib/Test/Mocha/Mock.pm
-lib/Test/Mocha/Role/HasMock.pm
-lib/Test/Mocha/Role/MethodCall.pm
 lib/Test/Mocha/Stub.pm
-lib/Test/Mocha/Stubber.pm
+lib/Test/Mocha/StubbedCall.pm
 lib/Test/Mocha/Types.pm
 lib/Test/Mocha/Util.pm
 lib/Test/Mocha/Verify.pm

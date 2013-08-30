@@ -1,11 +1,11 @@
-package Test::Mocha::Role::MethodCall;
+package Test::Mocha::MethodCall;
 {
-  $Test::Mocha::Role::MethodCall::VERSION = '0.13';
+  $Test::Mocha::MethodCall::VERSION = '0.14';
 }
 # ABSTRACT: A role that represents a method call
 
-use Moose::Role;
-use namespace::autoclean;
+use strict;
+use warnings;
 
 use Carp qw( croak );
 use Devel::PartialDump;
@@ -13,23 +13,33 @@ use Test::Mocha::Types qw( Matcher Slurpy );
 use Test::Mocha::Util qw( match );
 use Types::Standard qw( ArrayRef HashRef Str );
 
-our @CARP_NOT = qw( Test::Mocha::Verify );
+use overload '""' => \&as_string, fallback => 1;
+
+our @CARP_NOT = qw(
+    Test::Mocha::Inspect
+    Test::Mocha::Verify
+);
 
 # cause string overloaded objects (Matchers) to be stringified
 my $Dumper = Devel::PartialDump->new(objects => 0, stringify => 1);
 
-has 'name' => (
-    isa => Str,
-    is  => 'ro',
-    required => 1
-);
+sub new {
+    # uncoverable pod
+    my ($class, %args) = @_;
+    ### assert: Str->check( $args{name} )
+    ### assert: ArrayRef->check( $args{args} )
+    return bless \%args, $class;
+}
 
-has 'args' => (
-    isa     => ArrayRef,
-    traits  => ['Array'],
-    handles => { args => 'elements' },
-    default => sub { [] },
-);
+sub name {
+    # uncoverable pod
+    return $_[0]->{name};
+}
+
+sub args {
+    # uncoverable pod
+    return @{$_[0]->{args}};
+}
 
 # Stringifies this method call to something that roughly resembles what you'd
 # type in Perl.
@@ -94,16 +104,14 @@ sub satisfied_by {
     }
 
     # slurpy matcher should handle empty argument lists
-    if (@expected > 0) {
-        if ( Slurpy->check($expected[0]) ) {
-            my $matcher = shift @expected;
+    if ( @expected > 0 && Slurpy->check($expected[0]) ) {
+        my $matcher = shift @expected;
 
-            croak 'No arguments allowed after a slurpy type constraint'
-                unless @expected == 0;
+        croak 'No arguments allowed after a slurpy type constraint'
+            unless @expected == 0;
 
-            # uncoverable branch true
-            return if ! $slurp->($matcher, @input);
-        }
+        # uncoverable branch true
+        return if ! $slurp->($matcher, @input);
     }
 
     return @input == 0 && @expected == 0;

@@ -1,25 +1,29 @@
 package Test::Mocha::Inspect;
 {
-  $Test::Mocha::Inspect::VERSION = '0.13';
+  $Test::Mocha::Inspect::VERSION = '0.14';
 }
 # ABSTRACT: Inspect method calls on mock objects
 
-use Moose;
-use namespace::autoclean;
+use strict;
+use warnings;
 
-use aliased 'Test::Mocha::Invocation';
-
-use List::Util qw( first );
+use Test::Mocha::MethodCall;
+use Test::Mocha::Types qw( Mock );
 use Test::Mocha::Util qw( extract_method_name get_attribute_value );
 
-with 'Test::Mocha::Role::HasMock';
-
 our $AUTOLOAD;
+
+sub new {
+    # uncoverable pod
+    my ($class, %args) = @_;
+    ### assert: defined $args{mock} && Mock->check( $args{mock} )
+    return bless \%args, $class;
+}
 
 sub AUTOLOAD {
     my $self = shift;
 
-    my $inspect = Invocation->new(
+    my $inspect = Test::Mocha::MethodCall->new(
         name => extract_method_name($AUTOLOAD),
         args => \@_,
     );
@@ -27,8 +31,7 @@ sub AUTOLOAD {
     my $mock  = get_attribute_value($self, 'mock');
     my $calls = get_attribute_value($mock, 'calls');
 
-    return first { $inspect->satisfied_by($_) } @$calls;
+    return grep { $inspect->satisfied_by($_) } @$calls;
 }
 
-__PACKAGE__->meta->make_immutable;
 1;

@@ -1,51 +1,41 @@
 package Test::Mocha::Verify;
 {
-  $Test::Mocha::Verify::VERSION = '0.13';
+  $Test::Mocha::Verify::VERSION = '0.14';
 }
-# ABSTRACT: Verify interactions with a mock object by looking into its invocation history
+# ABSTRACT: Verify interactions with a mock object
 
-use Moose;
-use namespace::autoclean;
-
-use aliased 'Test::Mocha::Invocation';
+use strict;
+use warnings;
 
 use Test::Builder;
-use Test::Mocha::Types qw( NumRange );
+use Test::Mocha::MethodCall;
+use Test::Mocha::Types qw( Mock NumRange );
 use Test::Mocha::Util qw( extract_method_name get_attribute_value );
 use Types::Standard qw( Num Str );
-
-with 'Test::Mocha::Role::HasMock';
 
 our $AUTOLOAD;
 
 my $TB = Test::Builder->new;
 
-has 'test_name' => (
-    isa => Str,
-    reader => '_test_name',
-);
+sub new {
+    # uncoverable pod
+    my ($class, %args) = @_;
 
-has 'times' => (
-    isa => Num,
-    reader => '_times',
-);
-has 'at_least' => (
-    isa => Num,
-    reader => '_at_least',
-);
-has 'at_most' => (
-    isa => Num,
-    reader => '_at_most',
-);
-has 'between' => (
-    isa => NumRange,
-    reader => '_between',
-);
+    ### assert: defined $args{mock} && Mock->check( $args{mock} )
+    ### assert: !defined $args{ name     } || Str->check( $args{ name     } )
+    ### assert: !defined $args{ times    } || Num->check( $args{ times    } )
+    ### assert: !defined $args{ at_least } || Num->check( $args{ at_least } )
+    ### assert: !defined $args{ at_most  } || Num->check( $args{ at_most  } )
+    ### assert: !defined $args{ between  } || NumRange->check( $args{between} )
+    ### assert: 1 == grep { defined } @args{ times at_least at_most between }
+
+    return bless \%args, $class;
+}
 
 sub AUTOLOAD {
     my $self = shift;
 
-    my $observe = Invocation->new(
+    my $observe = Test::Mocha::MethodCall->new(
         name => extract_method_name($AUTOLOAD),
         args => \@_,
     );
@@ -55,29 +45,29 @@ sub AUTOLOAD {
 
     my $num_calls = grep { $observe->satisfied_by($_) } @$calls;
 
-    my $test_name = $self->_test_name;
+    my $test_name = $self->{test_name};
 
     # uncoverable branch false count:4
-    if (defined $self->_times) {
+    if (defined $self->{times}) {
         $test_name = sprintf '%s was called %u time(s)',
-            $observe->as_string, $self->_times
+            $observe->as_string, $self->{times}
                 unless defined $test_name;
-        $TB->is_num( $num_calls, $self->_times, $test_name );
+        $TB->is_num( $num_calls, $self->{times}, $test_name );
     }
-    elsif (defined $self->_at_least) {
+    elsif (defined $self->{at_least}) {
         $test_name = sprintf '%s was called at least %u time(s)',
-            $observe->as_string, $self->_at_least
+            $observe->as_string, $self->{at_least}
                 unless defined $test_name;
-        $TB->cmp_ok( $num_calls, '>=', $self->_at_least, $test_name );
+        $TB->cmp_ok( $num_calls, '>=', $self->{at_least}, $test_name );
     }
-    elsif (defined $self->_at_most) {
+    elsif (defined $self->{at_most}) {
         $test_name = sprintf '%s was called at most %u time(s)',
-            $observe->as_string, $self->_at_most
+            $observe->as_string, $self->{at_most}
                 unless defined $test_name;
-        $TB->cmp_ok( $num_calls, '<=', $self->_at_most, $test_name );
+        $TB->cmp_ok( $num_calls, '<=', $self->{at_most}, $test_name );
     }
-    elsif (defined $self->_between) {
-        my ($lower, $upper) = @{$self->_between};
+    elsif (defined $self->{between}) {
+        my ($lower, $upper) = @{ $self->{between} };
         $test_name = sprintf '%s was called between %u and %u time(s)',
             $observe->as_string, $lower, $upper
                 unless defined $test_name;
@@ -86,5 +76,4 @@ sub AUTOLOAD {
     return;
 }
 
-__PACKAGE__->meta->make_immutable;
 1;
