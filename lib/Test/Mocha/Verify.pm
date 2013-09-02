@@ -1,8 +1,8 @@
 package Test::Mocha::Verify;
 {
-  $Test::Mocha::Verify::VERSION = '0.14';
+  $Test::Mocha::Verify::VERSION = '0.15';
 }
-# ABSTRACT: Verify interactions with a mock object
+# ABSTRACT: Mock wrapper to verify method calls
 
 use strict;
 use warnings;
@@ -10,8 +10,8 @@ use warnings;
 use Test::Builder;
 use Test::Mocha::MethodCall;
 use Test::Mocha::Types qw( Mock NumRange );
-use Test::Mocha::Util qw( extract_method_name get_attribute_value );
-use Types::Standard qw( Num Str );
+use Test::Mocha::Util  qw( extract_method_name get_attribute_value );
+use Types::Standard    qw( Num Str );
 
 our $AUTOLOAD;
 
@@ -75,5 +75,8 @@ sub AUTOLOAD {
     }
     return;
 }
+
+# Don't let AUTOLOAD() handle DESTROY()
+sub DESTROY { }
 
 1;

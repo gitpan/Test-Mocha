@@ -1,17 +1,17 @@
 package Test::Mocha::MethodCall;
 {
-  $Test::Mocha::MethodCall::VERSION = '0.14';
+  $Test::Mocha::MethodCall::VERSION = '0.15';
 }
-# ABSTRACT: A role that represents a method call
+# ABSTRACT: Objects to represent method calls
 
 use strict;
 use warnings;
 
 use Carp qw( croak );
 use Devel::PartialDump;
-use Test::Mocha::Types qw( Matcher Slurpy );
-use Test::Mocha::Util qw( match );
-use Types::Standard qw( ArrayRef HashRef Str );
+use Test::Mocha::Types  qw( Matcher Slurpy );
+use Test::Mocha::Util   qw( match );
+use Types::Standard     qw( ArrayRef HashRef Str );
 
 use overload '""' => \&as_string, fallback => 1;
 
@@ -38,19 +38,21 @@ sub name {
 
 sub args {
     # uncoverable pod
-    return @{$_[0]->{args}};
+    return @{ $_[0]->{args} };
 }
 
-# Stringifies this method call to something that roughly resembles what you'd
-# type in Perl.
-
 sub as_string {
+    # """
+    # Stringifies this method call to something that roughly resembles what
+    # you'd type in Perl.
+    # """
     # uncoverable pod
     my ($self) = @_;
     return $self->name . '(' . $Dumper->dump($self->args) . ')';
 }
 
 my $slurp = sub {
+    # """check slurpy arguments"""
     my ($slurpy_matcher, @to_match) = @_;
 
     ### assert: Slurpy->check($slurpy_matcher)
@@ -71,9 +73,10 @@ my $slurp = sub {
     return $matcher->check($value);
 };
 
-# Returns true if the given C<$invocation> would satisfy this method call.
-
 sub satisfied_by {
+    # """
+    # Returns true if the given C<$invocation> satisfies this method call.
+    # """
     # uncoverable pod
     my ($self, $invocation) = @_;
 

@@ -1,15 +1,15 @@
 package Test::Mocha::Inspect;
 {
-  $Test::Mocha::Inspect::VERSION = '0.14';
+  $Test::Mocha::Inspect::VERSION = '0.15';
 }
-# ABSTRACT: Inspect method calls on mock objects
+# ABSTRACT: Mock wrapper to inspect method calls
 
 use strict;
 use warnings;
 
 use Test::Mocha::MethodCall;
 use Test::Mocha::Types qw( Mock );
-use Test::Mocha::Util qw( extract_method_name get_attribute_value );
+use Test::Mocha::Util  qw( extract_method_name get_attribute_value );
 
 our $AUTOLOAD;
 
@@ -33,5 +33,8 @@ sub AUTOLOAD {
 
     return grep { $inspect->satisfied_by($_) } @$calls;
 }
+
+# Don't let AUTOLOAD() handle DESTROY()
+sub DESTROY { }
 
 1;

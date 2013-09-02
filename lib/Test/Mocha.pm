@@ -2,12 +2,12 @@ use strict;
 use warnings;
 package Test::Mocha;
 {
-  $Test::Mocha::VERSION = '0.14';
+  $Test::Mocha::VERSION = '0.15';
 }
 # ABSTRACT: Test Spy/Stub Framework
 
 
-use Carp qw( croak );
+use Carp     qw( croak );
 use Exporter qw( import );
 use Test::Mocha::Inspect;
 use Test::Mocha::Mock;
@@ -127,7 +127,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.14
+version 0.15
 
 =head1 SYNOPSIS
 
@@ -150,8 +150,7 @@ other objects.
 
     # verify interactions with the dependent object
     ok( $order->is_filled, 'Order is filled' );
-    verify( $warehouse, '... and inventory is removed' )
-        ->remove_inventory($item1, 50);
+    verify( $warehouse, '... and inventory is removed' )->remove_inventory($item1, 50);
 
 =head1 DESCRIPTION
 
@@ -230,6 +229,21 @@ You may chain responses together to provide a series of responses.
     ok( $iterator->next == 2 );
     ok( $iterator->next == 3 );
     ok( exception { $iterator->next } );
+
+Responses may also be specified as callbacks.
+
+    my @returns = qw( first second );
+
+    stub($list)->get(Int)->executes(sub {
+        my ($i) = @_;
+        die "index out of bounds" if $i < 0;
+        return $returns[$i];
+    });
+
+    is( $list->get(0), 'first'  );
+    is( $list->get(1), 'second' );
+    is( $list->get(2), undef    );
+    like( exception { $list->get(-1) }, qr/^index out of bounds/ ),
 
 =head2 verify
 
@@ -377,11 +391,7 @@ recognised by slurpy types.
 
 =item *
 
-Ordered verifications
-
-=item *
-
-Stubs with callbacks
+Enhanced verifications
 
 =back
 

@@ -1,6 +1,6 @@
 package Test::Mocha::Mock;
 {
-  $Test::Mocha::Mock::VERSION = '0.14';
+  $Test::Mocha::Mock::VERSION = '0.15';
 }
 # ABSTRACT: Mock objects
 
@@ -9,27 +9,13 @@ use warnings;
 
 use Carp qw( croak );
 use Test::Mocha::MethodCall;
-use Test::Mocha::Types qw( Matcher );
-use Test::Mocha::Util qw( extract_method_name get_attribute_value
-                          has_caller_package );
-use Types::Standard qw( Str );
+use Test::Mocha::Types  qw( Matcher );
+use Test::Mocha::Util   qw( extract_method_name get_attribute_value
+                            has_caller_package );
+use Types::Standard     qw( Str );
 use UNIVERSAL::ref;
 
 our $AUTOLOAD;
-
-# Attributes:
-#
-# class
-# The name of the class that the object is pretending to be blessed into.
-
-# calls
-# An array reference containing a record of all methods called on this mock
-# to be used for verification.
-
-# stubs
-# Contains all of the methods stubbed for this mock. It maps the method name
-# to an array of stubs. Stubs are matched against invocation arguments to
-# determine which stub to dispatch to.
 
 sub new {
     # uncoverable pod
@@ -38,17 +24,17 @@ sub new {
 
     my $self = \%args;
     $self->{class} = __PACKAGE__ unless defined $self->{class};
-    $self->{calls} = [];
-    $self->{stubs} = {};
+    $self->{calls} = [];  # ArrayRef[ MethodCall ]
+    $self->{stubs} = {};  # $method_name => ArrayRef[ StubbedCall ]
 
     return bless $self, $class;
 }
 
 sub AUTOLOAD {
-    my $self = shift;
+    my ($self, @args) = @_;
     my $method_name = extract_method_name($AUTOLOAD);
 
-    my @invalid_args = grep { Matcher->check($_) } @_;
+    my @invalid_args = grep { Matcher->check($_) } @args;
     croak 'Mock methods may not be called with '
         . 'type constraint arguments: ' . join(', ', @invalid_args)
         unless @invalid_args == 0;
@@ -56,7 +42,7 @@ sub AUTOLOAD {
     # record the method call for verification
     my $method_call = Test::Mocha::MethodCall->new(
         name => $method_name,
-        args => [@_],
+        args => \@args,
     );
 
     my $calls = get_attribute_value($self, 'calls');
@@ -67,18 +53,21 @@ sub AUTOLOAD {
     # find a stub to return a response
     if (defined $stubs->{$method_name}) {
         foreach my $stub ( @{$stubs->{$method_name}} ) {
-            return $stub->execute
+            return $stub->do_next_execution(@args)
                 if $stub->satisfied_by($method_call);
         }
     }
     return;
 }
 
-# isa()
-# Always returns true. It allows the mock object to C<isa()> any class that
-# is required.
+# Don't let AUTOLOAD() handle DESTROY()
+sub DESTROY { }
 
 sub isa {
+    # """
+    # Always returns true. It allows the mock object to C<isa()> any class
+    # that is required.
+    # """
     # uncoverable pod
     my ($self, $package) = @_;
     return if (
@@ -89,29 +78,29 @@ sub isa {
     return 1;
 }
 
-# does()
-# Always returns true. It allows the mock object to C<does()> any role that
-# is required.
-
 sub does {
+    # """
+    # Always returns true. It allows the mock object to C<does()> any role
+    # that is required.
+    # """
     # uncoverable pod
     return 1;
 }
 
-# ref()
-# Returns the name of the class that this object is pretending to be.
-# C<ref()> can be called either as a method or as a function.
-
 sub ref {
+    # """
+    # Returns the name of the class that this object is pretending to be.
+    # C<ref()> can be called either as a method or as a function.
+    # """
     # uncoverable pod
     return $_[0]->{class};
 }
 
-# can()
-# Always returns a reference to the C<AUTOLOAD()> method. It allows the mock
-# object to C<can()> do any method that is required.
-
 sub can {
+    # """
+    # Always returns a reference to the C<AUTOLOAD()> method. It allows the
+    # mock object to C<can()> do any method that is required.
+    # """
     # uncoverable pod
     my ($self, $method_name) = @_;
     return sub {

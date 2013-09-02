@@ -63,7 +63,7 @@
    "provides" : {
       "Test::Mocha" : {
          "file" : "lib/Test/Mocha.pm",
-         "version" : "0.14"
+         "version" : "0.15"
       }
    },
    "release_status" : "stable",
@@ -78,7 +78,7 @@
          "web" : "http://github.com/stevenl/Test-Mocha"
       }
    },
-   "version" : "0.14",
+   "version" : "0.15",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018000"

@@ -2,18 +2,17 @@
 use strict;
 use warnings;
 
-use Test::More tests => 19;
+use Test::More tests => 21;
 use Test::Fatal;
 
 BEGIN { use_ok 'Test::Mocha' }
 
 use Exception::Tiny;
 use Test::Mocha::Util qw( get_attribute_value );
-use Types::Standard qw( Any ArrayRef HashRef slurpy );
+use Types::Standard   qw( Any ArrayRef HashRef Int slurpy );
 
 # setup
 my $mock  = mock;
-my $calls = get_attribute_value($mock, 'calls');
 my $stubs = get_attribute_value($mock, 'stubs');
 
 # stub() argument checks
@@ -110,6 +109,30 @@ subtest 'stub can chain responses' => sub {
     ok exception { $iterator->next };
 };
 
+subtest 'stub with callback' => sub {
+    my $list = mock;
+
+    my @returns = qw( first second );
+
+    stub($list)->get(Int)->executes(sub {
+        my ($i) = @_;
+        die "index out of bounds" if $i < 0;
+        return $returns[$i];
+    });
+
+    is $list->get(0), 'first', 'returns value';
+    is $list->get(1), 'second';
+    is $list->get(2),  undef, 'no return value specified';
+
+    like exception { $list->get(-1) }, qr/^index out of bounds/,
+        'exception is thrown';
+
+    my $e = exception { stub($list)->get(Int)->executes('not a coderef') };
+    like $e, qr/^executes\(\) must be given a coderef/,
+        'executes() with a non-coderef argument';
+    like $e, qr/stub\.t/, ' and message traces back to this script';
+};
+
 stub($mock)->set(Any)->returns('any');
 is $mock->set(1), 'any', 'stub() accepts type constraints';
 
@@ -148,3 +171,6 @@ like $e, qr/stub\.t/, ' and message traces back to this script';
 #     like exception { $list->get(-1) }, qr/index out of bounds/,
 #         'argument matcher';
 # };
+
+stub($mock)->DESTROY;
+ok !defined $stubs->{DESTROY}, 'DESTROY() is not AUTOLOADed';
