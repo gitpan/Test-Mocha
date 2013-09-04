@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Test::Mocha;
 {
-  $Test::Mocha::VERSION = '0.15';
+  $Test::Mocha::VERSION = '0.16';
 }
 # ABSTRACT: Test Spy/Stub Framework
 
@@ -127,7 +127,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.15
+version 0.16
 
 =head1 SYNOPSIS
 
@@ -152,6 +152,9 @@ other objects.
     ok( $order->is_filled, 'Order is filled' );
     verify( $warehouse, '... and inventory is removed' )->remove_inventory($item1, 50);
 
+    # clear the invocation history
+    clear($warehouse);
+
 =head1 DESCRIPTION
 
 We find all sorts of excuses to avoid writing tests for our code. Often it
@@ -172,7 +175,7 @@ rather than on internal state.
 
 =head1 FUNCTIONS
 
-=head2 mock
+=head2 mock()
 
 C<mock()> creates a new mock object.
 
@@ -191,48 +194,33 @@ return C<undef> (in scalar context) or an empty list (in list context).
     ok( $mock->can('any_method') );
     is( $mock->any_method(@args), undef );
 
-=head2 stub
+=head2 stub($mock) -> method(@args) -> returns|dies|executes($response)
 
 C<stub()> is used when you need a method to respond with something other than
-returning C<undef>. Use it to tell a method to return some value(s) or to
-raise an exception.
+returning C<undef>. You can specify 3 types of responses:
 
-    stub($mock)->method_that_returns(@args)->returns(1, 2, 3);
-    stub($mock)->method_that_dies(@args)->dies('exception');
+=over 4
 
-    is_deeply( [ $mock->method_that_returns(@args) ], [ 1, 2, 3 ] );
-    ok( exception { $mock->method_that_dies(@args) } );
+=item C<returns(@values)>
 
-The stub applies to the exact method and arguments specified. (But see also
-L</"ARGUMENT MATCHING"> for a shortcut around this.)
+Specifies that a stub should return 1 or more values.
 
-    stub($list)->get(0)->returns('first');
-    stub($list)->get(1)->returns('second');
+    stub($mock)->method(@args)->returns(1, 2, 3);
+    is_deeply( [ $mock->method(@args) ], [ 1, 2, 3 ] );
 
-    is( $list->get(0), 'first' );
-    is( $list->get(1), 'second' );
-    is( $list->get(2), undef );
+=item C<dies($message)>
 
-A stubbed response will persist until it is overridden.
+Specifies that a stub should raise an exception.
 
-    stub($warehouse)->has_inventory($item, 10)->returns(1);
-    ok( $warehouse->has_inventory($item, 10) ) for 1 .. 5;
+    stub($mock)->method(@args)->dies('exception');
+    ok( exception { $mock->method(@args) } );
 
-    stub($warehouse)->has_inventory($item, 10)->returns(0);
-    ok( !$warehouse->has_inventory($item, 10) ) for 1 .. 5;
+=item C<executes(sub{...})>
 
-You may chain responses together to provide a series of responses.
+Specifies that a stub should execute the given callback. The arguments used in
+the method call are passed on to the callback.
 
-    stub($iterator)->next
-        ->returns(1)->returns(2)->returns(3)->dies('exhuasted');
-    ok( $iterator->next == 1 );
-    ok( $iterator->next == 2 );
-    ok( $iterator->next == 3 );
-    ok( exception { $iterator->next } );
-
-Responses may also be specified as callbacks.
-
-    my @returns = qw( first second );
+    my @returns = qw( first second third );
 
     stub($list)->get(Int)->executes(sub {
         my ($i) = @_;
@@ -242,12 +230,40 @@ Responses may also be specified as callbacks.
 
     is( $list->get(0), 'first'  );
     is( $list->get(1), 'second' );
-    is( $list->get(2), undef    );
+    is( $list->get(5), undef    );
     like( exception { $list->get(-1) }, qr/^index out of bounds/ ),
 
-=head2 verify
+=back
 
-    verify($mock, [%option], [$test_name])->method(@args)
+A stub applies to the exact method and arguments specified. (But see also
+L</"ARGUMENT MATCHING"> for a shortcut around this.)
+
+    stub($list)->get(0)->returns('first');
+    stub($list)->get(1)->returns('second');
+
+    is( $list->get(0), 'first' );
+    is( $list->get(1), 'second' );
+    is( $list->get(2), undef );
+
+You may chain responses together to provide a series of responses.
+
+    stub($iterator)->next
+        ->returns(1)->returns(2)->returns(3)->dies('exhuasted');
+
+    ok( $iterator->next == 1 );
+    ok( $iterator->next == 2 );
+    ok( $iterator->next == 3 );
+    ok( exception { $iterator->next } );
+
+The last stubbed response will persist until it is overridden.
+
+    stub($warehouse)->has_inventory($item, 10)->returns(1);
+    ok( $warehouse->has_inventory($item, 10) ) for 1 .. 5;
+
+    stub($warehouse)->has_inventory($item, 10)->returns(0);
+    ok( !$warehouse->has_inventory($item, 10) ) for 1 .. 5;
+
+=head2 verify($mock, [%option], [$test_name]) -> method(@args)
 
 C<verify()> is used to test the interactions with the mock object. You can use
 it to verify that the correct methods were called, with the correct set of
@@ -260,11 +276,6 @@ tests and calls to C<verify()> are counted in the test plan.
 
 An option may be specified to constrain the test.
 
-    verify( $mock, times => 3 )->method(@args)
-    verify( $mock, at_least => 3 )->method(@args)
-    verify( $mock, at_most => 5 )->method(@args)
-    verify( $mock, between => [3, 5] )->method(@args)
-
 =over 4
 
 =item C<times>
@@ -272,20 +283,32 @@ An option may be specified to constrain the test.
 Specifies the number of times the given method is expected to be called. The
 default is 1 if no other option is specified.
 
+    verify( $mock, times => 3 )->method(@args)
+    # print: ok 1 - method(@args) was called 3 time(s)
+
 =item C<at_least>
 
 Specifies the minimum number of times the given method is expected to be
 called.
+
+    verify( $mock, at_least => 3 )->method(@args)
+    # print: ok 1 - method(@args) was called at least 3 time(s)
 
 =item C<at_most>
 
 Specifies the maximum number of times the given method is expected to be
 called.
 
+    verify( $mock, at_most => 5 )->method(@args)
+    # print: ok 1 - method(@args) was called at most 5 time(s)
+
 =item C<between>
 
 Specifies the minimum and maximum number of times the given method is expected
 to be called.
+
+    verify( $mock, between => [3, 5] )->method(@args)
+    # prints: ok 1 - method(@args) was called between 3 and 5 time(s)
 
 =back
 
@@ -295,11 +318,10 @@ default.
     verify( $warehouse, 'inventory removed' )->remove_inventory($item, 50);
     # prints: ok 1 - inventory removed
 
-    verify( $warehouse, times => 0, 'inventory not removed' )
-        ->remove_inventory($item, 50);
+    verify( $warehouse, times => 0, 'inventory not removed' )->remove_inventory($item, 50);
     # prints: ok 2 - inventory not removed
 
-=head2 inspect
+=head2 inspect($mock) -> method(@args)
 
 C<inspect()> returns a list of method calls matching the given method call
 specification. It can be useful for debugging failed C<verify()> calls. It may
@@ -315,12 +337,10 @@ is C<string> overloaded.
     is_deeply( [$method_call->args], ['book', 50],    'method args array' );
     is( $method_call, 'remove_inventory("book", 50)', 'method as string' );
 
-=head2 clear
+=head2 clear($mock)
 
-    clear($mock)
-
-Clears the method call history. Note that this does not affect the stubbed
-methods.
+Clears the method call history of the mock for it to be reused in another test.
+Note that this does not affect the stubbed methods.
 
 =head1 ARGUMENT MATCHING
 
@@ -392,6 +412,10 @@ recognised by slurpy types.
 =item *
 
 Enhanced verifications
+
+=item *
+
+Module functions and class methods
 
 =back
 
