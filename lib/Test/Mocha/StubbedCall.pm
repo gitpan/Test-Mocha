@@ -1,6 +1,6 @@
 package Test::Mocha::StubbedCall;
 {
-  $Test::Mocha::StubbedCall::VERSION = '0.16';
+  $Test::Mocha::StubbedCall::VERSION = '0.17';
 }
 # ABSTRACT: Objects to represent stubbed method calls
 

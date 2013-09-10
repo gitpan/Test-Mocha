@@ -38,7 +38,7 @@
             "Test::Builder" : "0",
             "Type::Library" : "0",
             "Type::Utils" : "0",
-            "Types::Standard" : "0",
+            "Types::Standard" : "0.008",
             "UNIVERSAL::ref" : "0",
             "experimental" : "0",
             "overload" : "0",
@@ -63,7 +63,7 @@
    "provides" : {
       "Test::Mocha" : {
          "file" : "lib/Test/Mocha.pm",
-         "version" : "0.16"
+         "version" : "0.17"
       }
    },
    "release_status" : "stable",
@@ -78,7 +78,7 @@
          "web" : "http://github.com/stevenl/Test-Mocha"
       }
    },
-   "version" : "0.16",
+   "version" : "0.17",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018000"

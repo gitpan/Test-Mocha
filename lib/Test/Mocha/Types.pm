@@ -1,6 +1,6 @@
 package Test::Mocha::Types;
 {
-  $Test::Mocha::Types::VERSION = '0.16';
+  $Test::Mocha::Types::VERSION = '0.17';
 }
 # ABSTRACT: Internal type constraints
 
@@ -14,7 +14,7 @@ use Type::Library
     );
 
 use Type::Utils -all;
-use Types::Standard qw( Dict InstanceOf Num Tuple );
+use Types::Standard 0.008 qw( Dict InstanceOf Num Tuple );
 
 union Matcher, [
     class_type( { class => 'Type::Tiny' } ),

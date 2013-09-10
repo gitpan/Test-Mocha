@@ -27,7 +27,7 @@ my %WriteMakefileArgs = (
     "Test::Builder" => 0,
     "Type::Library" => 0,
     "Type::Utils" => 0,
-    "Types::Standard" => 0,
+    "Types::Standard" => "0.008",
     "UNIVERSAL::ref" => 0,
     "experimental" => 0,
     "overload" => 0,
@@ -44,7 +44,7 @@ my %WriteMakefileArgs = (
     "Test::More" => 0,
     "constant" => 0
   },
-  "VERSION" => "0.16",
+  "VERSION" => "0.17",
   "test" => {
     "TESTS" => "t/*.t"
   }
