@@ -1,6 +1,6 @@
 package Test::Mocha::Stub;
 {
-  $Test::Mocha::Stub::VERSION = '0.17';
+  $Test::Mocha::Stub::VERSION = '0.18';
 }
 # ABSTRACT: Mock wrapper to create method stubs
 

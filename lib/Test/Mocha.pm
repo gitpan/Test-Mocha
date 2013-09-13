@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Test::Mocha;
 {
-  $Test::Mocha::VERSION = '0.17';
+  $Test::Mocha::VERSION = '0.18';
 }
 # ABSTRACT: Test Spy/Stub Framework
 
@@ -15,7 +15,7 @@ use Test::Mocha::Stub;
 use Test::Mocha::Types 'NumRange', Mock => { -as => 'MockType' };
 use Test::Mocha::Util qw( get_attribute_value );
 use Test::Mocha::Verify;
-use Types::Standard qw( Num );
+use Types::Standard qw( ArrayRef HashRef Num slurpy );
 
 our @EXPORT = qw(
     mock
@@ -23,7 +23,15 @@ our @EXPORT = qw(
     verify
     inspect
     clear
+    SlurpyArray
+    SlurpyHash
 );
+
+
+use constant {
+    SlurpyArray => slurpy(ArrayRef),
+    SlurpyHash  => slurpy(HashRef),
+};
 
 
 sub mock {
@@ -127,7 +135,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.17
+version 0.18
 
 =head1 SYNOPSIS
 
@@ -225,7 +233,7 @@ Specifies that a stub should raise an exception.
     stub($mock)->method(@args)->dies('exception');
     ok( exception { $mock->method(@args) } );
 
-=item C<executes(sub{...})>
+=item C<executes($coderef)>
 
 Specifies that a stub should execute the given callback. The arguments used in
 the method call are passed on to the callback.
@@ -233,7 +241,7 @@ the method call are passed on to the callback.
     my @returns = qw( first second third );
 
     stub($list)->get(Int)->executes(sub {
-        my ($i) = @_;
+        my ($self, $i) = @_;
         die "index out of bounds" if $i < 0;
         return $returns[$i];
     });
@@ -245,8 +253,8 @@ the method call are passed on to the callback.
 
 =back
 
-A stub applies to the exact method and arguments specified. (But see also
-L</"ARGUMENT MATCHING"> for a shortcut around this.)
+A stub applies to the exact method and arguments specified (but see also
+L</"ARGUMENT MATCHING"> for a shortcut around this).
 
     stub($list)->get(0)->returns('first');
     stub($list)->get(1)->returns('second');
@@ -357,11 +365,14 @@ is C<string> overloaded.
 Clears the method call history of the mock for it to be reused in another test.
 Note that this does not affect the stubbed methods.
 
+=for Pod::Coverage SlurpyArray SlurpyHash
+
 =head1 ARGUMENT MATCHING
 
-Argument matchers may be used in place of specifying exact method arguments
-with C<stub()>, C<verify()> or C<inspect>. They will add flexibility and save
-much time in verifications and stubbing.
+Argument matchers may be used in place of specifying exact method arguments.
+They allow you to be more general and will save you much time in your
+method specifications to stubs and verifications. Argument matchers may be used
+with C<stub()>, C<verify()> and C<inspect>.
 
 =head2 Pre-defined types
 
@@ -408,16 +419,16 @@ You may also use your own types, defined using L<Type::Utils>.
 
 =head2 Argument slurping
 
-You may use the L<C<slurpy()>|Types::Standard/Structured> function if you
-don't care what arguments are used. They will just slurp up the remaining
-arguments as though they match. Note that empty argument lists are also
-recognised by slurpy types.
+C<SlurpyArray> and C<SlurpyHash> are special argument matchers exported by
+Test::Mocha that you can use when you don't care what arguments are used.
+They will just slurp up the remaining arguments as though they match.
 
-    # prints: ok 3 - set({ slurpy: ArrayRef }) was called 2 time(s)
-    verify($list)->set( slurpy ArrayRef );
+    verify($list)->set( SlurpyArray );
+    verify($list)->set( Int, SlurpyHash );
 
-    # prints: ok 4 - set({ slurpy: HashRef }) was called 2 time(s)
-    verify($list)->set( slurpy HashRef );
+Because they consume the remaining arguments, you can't use further argument
+validators after them. But you can, of course, use them before. Note also that
+they will match empty argument lists.
 
 =head1 TO DO
 

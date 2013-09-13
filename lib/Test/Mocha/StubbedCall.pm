@@ -1,6 +1,6 @@
 package Test::Mocha::StubbedCall;
 {
-  $Test::Mocha::StubbedCall::VERSION = '0.17';
+  $Test::Mocha::StubbedCall::VERSION = '0.18';
 }
 # ABSTRACT: Objects to represent stubbed method calls
 
@@ -13,7 +13,6 @@ use Scalar::Util qw( blessed );
 our @ISA = qw( Test::Mocha::MethodCall );
 
 # croak() messages should not trace back to Mocha modules
-# to facilitate debugging of user test scripts
 our @CARP_NOT = qw( Test::Mocha::Mock );
 
 sub new {
@@ -31,23 +30,24 @@ sub returns {
     # uncoverable pod
     my ($self, @return_values) = @_;
 
-    push @{ $self->{executions} }, sub {
-        return wantarray || @return_values > 1
-            ? @return_values
-            : $return_values[0];
-    };
+    push @{ $self->{executions} },
+        @return_values == 1
+          ? sub { $return_values[0] }
+          : sub { @return_values    };
+
     return $self;
 }
 
 sub dies {
     # """Adds a die response to the end of the executions queue."""
     # uncoverable pod
-    my ($self, $exception) = @_;
+    my ($self, @exception) = @_;
 
     push @{ $self->{executions} },
-        blessed($exception) && $exception->can('throw')
-          ? sub { $exception->throw }
-          : sub { croak $exception  };
+        # check if first arg is a throwable exception
+        blessed($exception[0]) && $exception[0]->can('throw')
+          ? sub { $exception[0]->throw }
+          : sub { croak @exception     };
 
     return $self;
 }

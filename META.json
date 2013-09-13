@@ -40,6 +40,7 @@
             "Type::Utils" : "0",
             "Types::Standard" : "0.008",
             "UNIVERSAL::ref" : "0",
+            "constant" : "0",
             "experimental" : "0",
             "overload" : "0",
             "perl" : "5.010001",
@@ -56,14 +57,14 @@
             "Test::Builder::Tester" : "0",
             "Test::Fatal" : "0",
             "Test::More" : "0",
-            "constant" : "0"
+            "Test::Requires" : "0"
          }
       }
    },
    "provides" : {
       "Test::Mocha" : {
          "file" : "lib/Test/Mocha.pm",
-         "version" : "0.17"
+         "version" : "0.18"
       }
    },
    "release_status" : "stable",
@@ -78,7 +79,7 @@
          "web" : "http://github.com/stevenl/Test-Mocha"
       }
    },
-   "version" : "0.17",
+   "version" : "0.18",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018000"
@@ -207,7 +208,7 @@
          {
             "class" : "Dist::Zilla::Plugin::PodSyntaxTests",
             "name" : "PodSyntaxTests",
-            "version" : "4.300035"
+            "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::NoTabsTests",

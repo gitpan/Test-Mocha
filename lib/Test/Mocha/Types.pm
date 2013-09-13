@@ -1,6 +1,6 @@
 package Test::Mocha::Types;
 {
-  $Test::Mocha::Types::VERSION = '0.17';
+  $Test::Mocha::Types::VERSION = '0.18';
 }
 # ABSTRACT: Internal type constraints
 
