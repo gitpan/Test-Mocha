@@ -17,6 +17,7 @@ lib/Test/Mocha/Util.pm
 lib/Test/Mocha/Verify.pm
 t/clear.t
 t/inspect.t
+t/inspect_all.t
 t/matcher_moose.t
 t/matcher_typetiny.t
 t/mock.t

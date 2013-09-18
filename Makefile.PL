@@ -36,7 +36,6 @@ my %WriteMakefileArgs = (
     "warnings" => 0
   },
   "TEST_REQUIRES" => {
-    "Exception::Tiny" => 0,
     "Moose::Util::TypeConstraints" => 0,
     "MooseX::Types::Moose" => 0,
     "MooseX::Types::Structured" => 0,
@@ -45,7 +44,7 @@ my %WriteMakefileArgs = (
     "Test::More" => 0,
     "Test::Requires" => 0
   },
-  "VERSION" => "0.18",
+  "VERSION" => "0.19",
   "test" => {
     "TESTS" => "t/*.t"
   }

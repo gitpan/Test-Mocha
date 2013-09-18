@@ -50,7 +50,6 @@
       },
       "test" : {
          "requires" : {
-            "Exception::Tiny" : "0",
             "Moose::Util::TypeConstraints" : "0",
             "MooseX::Types::Moose" : "0",
             "MooseX::Types::Structured" : "0",
@@ -64,7 +63,7 @@
    "provides" : {
       "Test::Mocha" : {
          "file" : "lib/Test/Mocha.pm",
-         "version" : "0.18"
+         "version" : "0.19"
       }
    },
    "release_status" : "stable",
@@ -79,7 +78,7 @@
          "web" : "http://github.com/stevenl/Test-Mocha"
       }
    },
-   "version" : "0.18",
+   "version" : "0.19",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018000"
@@ -87,77 +86,97 @@
       "plugins" : [
          {
             "class" : "Dist::Zilla::Plugin::GatherDir",
-            "name" : "@Filter/GatherDir",
+            "name" : "@Basic/GatherDir",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::PruneCruft",
-            "name" : "@Filter/PruneCruft",
+            "name" : "@Basic/PruneCruft",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::ManifestSkip",
-            "name" : "@Filter/ManifestSkip",
+            "name" : "@Basic/ManifestSkip",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::MetaYAML",
-            "name" : "@Filter/MetaYAML",
+            "name" : "@Basic/MetaYAML",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::License",
-            "name" : "@Filter/License",
+            "name" : "@Basic/License",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::Readme",
-            "name" : "@Filter/Readme",
+            "name" : "@Basic/Readme",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::ExtraTests",
-            "name" : "@Filter/ExtraTests",
+            "name" : "@Basic/ExtraTests",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::ExecDir",
-            "name" : "@Filter/ExecDir",
+            "name" : "@Basic/ExecDir",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::ShareDir",
-            "name" : "@Filter/ShareDir",
+            "name" : "@Basic/ShareDir",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::MakeMaker",
-            "name" : "@Filter/MakeMaker",
+            "name" : "@Basic/MakeMaker",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::Manifest",
-            "name" : "@Filter/Manifest",
+            "name" : "@Basic/Manifest",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::TestRelease",
-            "name" : "@Filter/TestRelease",
+            "name" : "@Basic/TestRelease",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::ConfirmRelease",
-            "name" : "@Filter/ConfirmRelease",
+            "name" : "@Basic/ConfirmRelease",
             "version" : "4.300036"
          },
          {
             "class" : "Dist::Zilla::Plugin::UploadToCPAN",
-            "name" : "@Filter/UploadToCPAN",
+            "name" : "@Basic/UploadToCPAN",
             "version" : "4.300036"
+         },
+         {
+            "class" : "Dist::Zilla::Plugin::MarkdownInRoot::WithMetaLinks",
+            "name" : "MarkdownInRoot::WithMetaLinks",
+            "version" : "0.1.2"
          },
          {
             "class" : "Dist::Zilla::Plugin::PruneFiles",
             "name" : "PruneFiles",
+            "version" : "4.300036"
+         },
+         {
+            "class" : "Dist::Zilla::Plugin::FileFinder::ByName",
+            "name" : "PublicModules",
+            "version" : "4.300036"
+         },
+         {
+            "class" : "Dist::Zilla::Plugin::PodWeaver",
+            "name" : "PodWeaver",
+            "version" : "3.101641"
+         },
+         {
+            "class" : "Dist::Zilla::Plugin::PkgVersion",
+            "name" : "PkgVersion",
             "version" : "4.300036"
          },
          {
@@ -176,11 +195,6 @@
             "version" : "4.300036"
          },
          {
-            "class" : "Dist::Zilla::Plugin::PkgVersion",
-            "name" : "PkgVersion",
-            "version" : "4.300036"
-         },
-         {
             "class" : "Dist::Zilla::Plugin::MetaResources",
             "name" : "MetaResources",
             "version" : "4.300036"
@@ -194,16 +208,6 @@
             "class" : "Dist::Zilla::Plugin::MetaNoIndex",
             "name" : "MetaNoIndex",
             "version" : "4.300036"
-         },
-         {
-            "class" : "Dist::Zilla::Plugin::FileFinder::ByName",
-            "name" : "PublicModules",
-            "version" : "4.300036"
-         },
-         {
-            "class" : "Dist::Zilla::Plugin::PodWeaver",
-            "name" : "PodWeaver",
-            "version" : "3.101641"
          },
          {
             "class" : "Dist::Zilla::Plugin::PodSyntaxTests",

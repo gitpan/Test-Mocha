@@ -1,6 +1,6 @@
 package Test::Mocha::MethodCall;
 {
-  $Test::Mocha::MethodCall::VERSION = '0.18';
+  $Test::Mocha::MethodCall::VERSION = '0.19';
 }
 # ABSTRACT: Objects to represent method calls
 

@@ -1,6 +1,6 @@
 package Test::Mocha::StubbedCall;
 {
-  $Test::Mocha::StubbedCall::VERSION = '0.18';
+  $Test::Mocha::StubbedCall::VERSION = '0.19';
 }
 # ABSTRACT: Objects to represent stubbed method calls
 
@@ -31,9 +31,9 @@ sub returns {
     my ($self, @return_values) = @_;
 
     push @{ $self->{executions} },
-        @return_values == 1
-          ? sub { $return_values[0] }
-          : sub { @return_values    };
+        @return_values == 1 ? sub { $return_values[0] } :
+        @return_values  > 1 ? sub { @return_values    } :
+                              sub { };  # @return_values == 0
 
     return $self;
 }

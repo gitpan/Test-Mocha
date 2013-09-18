@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Test::Mocha;
 {
-  $Test::Mocha::VERSION = '0.18';
+  $Test::Mocha::VERSION = '0.19';
 }
 # ABSTRACT: Test Spy/Stub Framework
 
@@ -22,6 +22,7 @@ our @EXPORT = qw(
     stub
     verify
     inspect
+    inspect_all
     clear
     SlurpyArray
     SlurpyHash
@@ -111,6 +112,16 @@ sub inspect {
 }
 
 
+sub inspect_all {
+    my ($mock) = @_;
+
+    croak 'inspect_all() must be given a mock object'
+        unless defined $mock && MockType->check($mock);
+
+    return @{ $mock->{calls} };
+}
+
+
 sub clear {
     my ($mock) = @_;
 
@@ -135,7 +146,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.18
+version 0.19
 
 =head1 SYNOPSIS
 
@@ -235,8 +246,8 @@ Specifies that a stub should raise an exception.
 
 =item C<executes($coderef)>
 
-Specifies that a stub should execute the given callback. The arguments used in
-the method call are passed on to the callback.
+Specifies that a stub should execute the given callback. The arguments used
+in the method call are passed on to the callback.
 
     my @returns = qw( first second third );
 
@@ -300,8 +311,8 @@ An option may be specified to constrain the test.
 
 =item C<times>
 
-Specifies the number of times the given method is expected to be called. The
-default is 1 if no other option is specified.
+Specifies the number of times the given method is expected to be called.
+The default is 1 if no other option is specified.
 
     verify( $mock, times => 3 )->method(@args)
     # print: ok 1 - method(@args) was called 3 time(s)
@@ -324,8 +335,8 @@ called.
 
 =item C<between>
 
-Specifies the minimum and maximum number of times the given method is expected
-to be called.
+Specifies the minimum and maximum number of times the given method is
+expected to be called.
 
     verify( $mock, between => [3, 5] )->method(@args)
     # prints: ok 1 - method(@args) was called between 3 and 5 time(s)
@@ -357,6 +368,13 @@ is C<string> overloaded.
     is( $method_call->name, 'remove_inventory',       'method name' );
     is_deeply( [$method_call->args], ['book', 50],    'method args array' );
     is( $method_call, 'remove_inventory("book", 50)', 'method as string' );
+
+=head2 inspect_all
+
+    @all_method_calls = inspect_all($mock)
+
+C<inspect_all()> returns a list containing all methods called on the mock
+object. This is mainly used for debugging.
 
 =head2 clear
 
@@ -463,8 +481,8 @@ Steven Lee <stevenwh.lee@gmail.com>
 This module is a fork from L<Test::Magpie> originally written by Oliver
 Charles (CYCLES).
 
-It is inspired by the popular L<Mockito|http://code.google.com/p/mockito/> for
-Java and Python by Szczepan Faber.
+It is inspired by the popular L<Mockito|http://code.google.com/p/mockito/>
+for Java and Python by Szczepan Faber.
 
 =head1 SEE ALSO
 
