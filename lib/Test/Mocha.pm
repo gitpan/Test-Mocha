@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package Test::Mocha;
 {
-  $Test::Mocha::VERSION = '0.19';
+  $Test::Mocha::VERSION = '0.20';
 }
 # ABSTRACT: Test Spy/Stub Framework
 
@@ -13,7 +13,7 @@ use Test::Mocha::Inspect;
 use Test::Mocha::Mock;
 use Test::Mocha::Stub;
 use Test::Mocha::Types 'NumRange', Mock => { -as => 'MockType' };
-use Test::Mocha::Util qw( get_attribute_value );
+use Test::Mocha::Util qw( getattr );
 use Test::Mocha::Verify;
 use Types::Standard qw( ArrayRef HashRef Num slurpy );
 
@@ -36,14 +36,7 @@ use constant {
 
 
 sub mock {
-    return Test::Mocha::Mock->new if @_ == 0;
-
-    my ($class) = @_;
-
-    croak 'The argument for mock() must be a string'
-        unless !ref $class;
-
-    return Test::Mocha::Mock->new(class => $class);
+    return Test::Mocha::Mock->new(@_);
 }
 
 
@@ -128,7 +121,7 @@ sub clear {
     croak 'clear() must be given a mock object'
         unless defined $mock && MockType->check($mock);
 
-    my $calls = get_attribute_value($mock, 'calls');
+    my $calls = getattr($mock, 'calls');
     @$calls = ();
 
     return;
@@ -146,7 +139,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.19
+version 0.20
 
 =head1 SYNOPSIS
 
@@ -219,6 +212,13 @@ return C<undef> (in scalar context) or an empty list (in list context).
 
     ok( $mock->can('any_method') );
     is( $mock->any_method(@args), undef );
+
+You can stub C<ref()> to specify the value it should return (see below for
+more info about stubbing).
+
+    stub($mock)->ref->returns('AnyClass');
+    is( $mock->ref, 'AnyClass' );
+    is( ref($mock), 'AnyClass' );
 
 =head2 stub
 
@@ -356,18 +356,36 @@ default.
 
     @method_calls = inspect($mock)->method(@args)
 
+    ( $method_call ) = inspect($warehouse)->remove_inventory(Str, Int);
+
+    is( $method_call->name,            'remove_inventory' );
+    is_deeply( [$method_call->args],   ['book', 50] );
+    is_deeply( [$method_call->caller], ['test.pl', 5] );
+    is( "$method_call", 'remove_inventory("book", 50) called at test.pl line 5' );
+
 C<inspect()> returns a list of method calls matching the given method call
 specification. It can be useful for debugging failed C<verify()> calls. Or use
 it in place of a complex C<verify()> call to break it down into smaller tests.
 
-Each method call object has a C<name> and an C<args> property, and it
-is C<string> overloaded.
+The method call objects have the following accessor methods:
 
-    my ($method_calls) = inspect($warehouse)->remove_inventory(Str, Int);
+=over 4
 
-    is( $method_call->name, 'remove_inventory',       'method name' );
-    is_deeply( [$method_call->args], ['book', 50],    'method args array' );
-    is( $method_call, 'remove_inventory("book", 50)', 'method as string' );
+=item *
+
+C<name> - The name of the method called.
+
+=item *
+
+C<args> - The list of arguments passed to the method call.
+
+=item *
+
+C<caller> - The file and line number from which the method was called.
+
+=back
+
+They are also C<string> overloaded.
 
 =head2 inspect_all
 

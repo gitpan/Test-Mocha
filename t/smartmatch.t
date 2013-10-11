@@ -1,4 +1,4 @@
-#!perl -T
+#!/usr/bin/perl -T
 use strict;
 use warnings;
 
@@ -11,8 +11,6 @@ use 5.010001;
 use Test::More tests => 11;
 
 BEGIN { use_ok 'Test::Mocha' }
-
-use constant MethodCall => 'Test::Mocha::MethodCall';
 
 subtest 'X ~~ Array' => sub {
     my $mock = mock;

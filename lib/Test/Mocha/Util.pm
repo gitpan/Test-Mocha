@@ -1,6 +1,6 @@
 package Test::Mocha::Util;
 {
-  $Test::Mocha::Util::VERSION = '0.19';
+  $Test::Mocha::Util::VERSION = '0.20';
 }
 # ABSTRACT: Internal utility functions
 
@@ -17,7 +17,8 @@ use Scalar::Util qw( blessed looks_like_number refaddr );
 
 our @EXPORT_OK = qw(
     extract_method_name
-    get_attribute_value
+    find_caller
+    getattr
     has_caller_package
     match
 );
@@ -30,7 +31,7 @@ sub extract_method_name {
     return $method_name;
 }
 
-sub get_attribute_value {
+sub getattr {
     # """Safely get the attribute value of an object."""
     # uncoverable pod
     my ($object, $attribute) = @_;
@@ -40,6 +41,18 @@ sub get_attribute_value {
         if not defined $object->{$attribute};
 
     return $object->{$attribute};
+}
+
+sub find_caller {
+    # """Search the call stack to find an external caller"""
+    # uncoverable pod
+    my ($package, $file, $line);
+
+    for ( my $i = 1; 1; $i++ ) {
+        ($package, $file, $line) = caller($i);
+        last if $package ne 'UNIVERSAL::ref';
+    }
+    return ($file, $line);
 }
 
 sub has_caller_package {

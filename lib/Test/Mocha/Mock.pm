@@ -1,6 +1,6 @@
 package Test::Mocha::Mock;
 {
-  $Test::Mocha::Mock::VERSION = '0.19';
+  $Test::Mocha::Mock::VERSION = '0.20';
 }
 # ABSTRACT: Mock objects
 
@@ -10,8 +10,8 @@ use warnings;
 use Carp qw( croak );
 use Test::Mocha::MethodCall;
 use Test::Mocha::Types  qw( Matcher );
-use Test::Mocha::Util   qw( extract_method_name get_attribute_value
-                            has_caller_package );
+use Test::Mocha::Util   qw( extract_method_name find_caller
+                            getattr has_caller_package );
 use Types::Standard     qw( Str );
 use UNIVERSAL::ref;
 
@@ -19,13 +19,11 @@ our $AUTOLOAD;
 
 sub new {
     # uncoverable pod
-    my ($class, %args) = @_;
-    ### assert: !defined $args{class} || Str->check( $args{class} )
+    my $class = shift;
+    my $self  = {@_};
 
-    my $self = \%args;
-    $self->{class} = __PACKAGE__ unless defined $self->{class};
     $self->{calls} = [];  # ArrayRef[ MethodCall ]
-    $self->{stubs} = {};  # $method_name => ArrayRef[ StubbedCall ]
+    $self->{stubs} = {};  # $method_name => ArrayRef[ MethodStub ]
 
     return bless $self, $class;
 }
@@ -41,12 +39,13 @@ sub AUTOLOAD {
 
     # record the method call for verification
     my $method_call = Test::Mocha::MethodCall->new(
-        name => $method_name,
-        args => \@args,
+        name   => $method_name,
+        args   => \@args,
+        caller => [ find_caller ],
     );
 
-    my $calls = get_attribute_value($self, 'calls');
-    my $stubs = get_attribute_value($self, 'stubs');
+    my $calls = getattr($self, 'calls');
+    my $stubs = getattr($self, 'stubs');
 
     push @$calls, $method_call;
 
@@ -85,15 +84,6 @@ sub does {
     # """
     # uncoverable pod
     return 1;
-}
-
-sub ref {
-    # """
-    # Returns the name of the class that this object is pretending to be.
-    # C<ref()> can be called either as a method or as a function.
-    # """
-    # uncoverable pod
-    return $_[0]->{class};
 }
 
 sub can {

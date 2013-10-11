@@ -36,15 +36,12 @@ my %WriteMakefileArgs = (
     "warnings" => 0
   },
   "TEST_REQUIRES" => {
-    "Moose::Util::TypeConstraints" => 0,
-    "MooseX::Types::Moose" => 0,
-    "MooseX::Types::Structured" => 0,
     "Test::Builder::Tester" => 0,
     "Test::Fatal" => 0,
     "Test::More" => 0,
     "Test::Requires" => 0
   },
-  "VERSION" => "0.19",
+  "VERSION" => "0.20",
   "test" => {
     "TESTS" => "t/*.t"
   }

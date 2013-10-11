@@ -1,19 +1,17 @@
-package Test::Mocha::StubbedCall;
+package Test::Mocha::MethodStub;
 {
-  $Test::Mocha::StubbedCall::VERSION = '0.19';
+  $Test::Mocha::MethodStub::VERSION = '0.20';
 }
-# ABSTRACT: Objects to represent stubbed method calls
+# ABSTRACT: Objects to represent stubbed methods with arguments and responses
 
 use strict;
 use warnings;
 
 use Carp qw( croak );
 use Scalar::Util qw( blessed );
+use Test::Mocha::Method;
 
-our @ISA = qw( Test::Mocha::MethodCall );
-
-# croak() messages should not trace back to Mocha modules
-our @CARP_NOT = qw( Test::Mocha::Mock );
+our @ISA = qw( Test::Mocha::Method );
 
 sub new {
     # uncoverable pod
