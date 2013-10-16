@@ -25,10 +25,9 @@ optional_features:
 provides:
   Test::Mocha:
     file: lib/Test/Mocha.pm
-    version: 0.20
+    version: 0.21
 requires:
   Carp: 0
-  Devel::PartialDump: 0
   Exporter: 0
   Scalar::Util: 0
   Test::Builder: 0
@@ -46,7 +45,7 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Test-Mocha
   homepage: https://github.com/stevenl/Test-Mocha
   repository: https://github.com/stevenl/Test-Mocha.git
-version: 0.20
+version: 0.21
 x_Dist_Zilla:
   perl:
     version: 5.018000

@@ -21,6 +21,7 @@ my @files = (
     'lib/Test/Mocha/MethodCall.pm',
     'lib/Test/Mocha/MethodStub.pm',
     'lib/Test/Mocha/Mock.pm',
+    'lib/Test/Mocha/PartialDump.pm',
     'lib/Test/Mocha/Stub.pm',
     'lib/Test/Mocha/Types.pm',
     'lib/Test/Mocha/Util.pm',

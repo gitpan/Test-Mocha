@@ -14,6 +14,7 @@ lib/Test/Mocha/Method.pm
 lib/Test/Mocha/MethodCall.pm
 lib/Test/Mocha/MethodStub.pm
 lib/Test/Mocha/Mock.pm
+lib/Test/Mocha/PartialDump.pm
 lib/Test/Mocha/Stub.pm
 lib/Test/Mocha/Types.pm
 lib/Test/Mocha/Util.pm
@@ -25,6 +26,10 @@ t/matcher_moose.t
 t/matcher_typetiny.t
 t/mock.t
 t/mockito_tutorial.t
+t/partialdump/basic.t
+t/partialdump/delim.t
+t/partialdump/max.t
+t/partialdump/objects.t
 t/release-no-tabs.t
 t/release-pod-coverage.t
 t/release-pod-syntax.t

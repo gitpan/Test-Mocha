@@ -21,7 +21,6 @@ my %WriteMakefileArgs = (
   "NAME" => "Test::Mocha",
   "PREREQ_PM" => {
     "Carp" => 0,
-    "Devel::PartialDump" => 0,
     "Exporter" => 0,
     "Scalar::Util" => 0,
     "Test::Builder" => 0,
@@ -41,9 +40,9 @@ my %WriteMakefileArgs = (
     "Test::More" => 0,
     "Test::Requires" => 0
   },
-  "VERSION" => "0.20",
+  "VERSION" => "0.21",
   "test" => {
-    "TESTS" => "t/*.t"
+    "TESTS" => "t/*.t t/partialdump/*.t"
   }
 );
 

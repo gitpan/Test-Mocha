@@ -1,5 +1,4 @@
 requires "Carp" => "0";
-requires "Devel::PartialDump" => "0";
 requires "Exporter" => "0";
 requires "Scalar::Util" => "0";
 requires "Test::Builder" => "0";

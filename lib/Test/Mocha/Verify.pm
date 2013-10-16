@@ -1,6 +1,6 @@
 package Test::Mocha::Verify;
 {
-  $Test::Mocha::Verify::VERSION = '0.20';
+  $Test::Mocha::Verify::VERSION = '0.21';
 }
 # ABSTRACT: Mock wrapper to verify method calls
 
