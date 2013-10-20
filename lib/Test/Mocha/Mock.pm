@@ -1,6 +1,6 @@
 package Test::Mocha::Mock;
 {
-  $Test::Mocha::Mock::VERSION = '0.21';
+  $Test::Mocha::Mock::VERSION = '0.21_01';
 }
 # ABSTRACT: Mock objects
 

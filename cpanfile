@@ -18,6 +18,7 @@ on 'test' => sub {
   requires "Test::Fatal" => "0";
   requires "Test::More" => "0";
   requires "Test::Requires" => "0";
+  requires "version" => "0.77";
 };
 
 on 'configure' => sub {

@@ -7,6 +7,7 @@ build_requires:
   Test::Fatal: 0
   Test::More: 0
   Test::Requires: 0
+  version: 0.77
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0
@@ -25,7 +26,7 @@ optional_features:
 provides:
   Test::Mocha:
     file: lib/Test/Mocha.pm
-    version: 0.21
+    version: 0.21_01
 requires:
   Carp: 0
   Exporter: 0
@@ -45,7 +46,7 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Test-Mocha
   homepage: https://github.com/stevenl/Test-Mocha
   repository: https://github.com/stevenl/Test-Mocha.git
-version: 0.21
+version: 0.21_01
 x_Dist_Zilla:
   perl:
     version: 5.018000

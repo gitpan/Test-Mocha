@@ -1,6 +1,6 @@
 package Test::Mocha::Inspect;
 {
-  $Test::Mocha::Inspect::VERSION = '0.21';
+  $Test::Mocha::Inspect::VERSION = '0.21_01';
 }
 # ABSTRACT: Mock wrapper to inspect method calls
 

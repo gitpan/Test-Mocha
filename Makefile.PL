@@ -38,9 +38,10 @@ my %WriteMakefileArgs = (
     "Test::Builder::Tester" => 0,
     "Test::Fatal" => 0,
     "Test::More" => 0,
-    "Test::Requires" => 0
+    "Test::Requires" => 0,
+    "version" => "0.77"
   },
-  "VERSION" => "0.21",
+  "VERSION" => "0.21_01",
   "test" => {
     "TESTS" => "t/*.t t/partialdump/*.t"
   }

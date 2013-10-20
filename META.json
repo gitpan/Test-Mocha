@@ -71,17 +71,18 @@
             "Test::Builder::Tester" : "0",
             "Test::Fatal" : "0",
             "Test::More" : "0",
-            "Test::Requires" : "0"
+            "Test::Requires" : "0",
+            "version" : "0.77"
          }
       }
    },
    "provides" : {
       "Test::Mocha" : {
          "file" : "lib/Test/Mocha.pm",
-         "version" : "0.21"
+         "version" : "0.21_01"
       }
    },
-   "release_status" : "stable",
+   "release_status" : "testing",
    "resources" : {
       "bugtracker" : {
          "mailto" : "bug-Test-Mocha@rt.cpan.org",
@@ -94,7 +95,7 @@
          "web" : "https://github.com/stevenl/Test-Mocha"
       }
    },
-   "version" : "0.21",
+   "version" : "0.21_01",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018000"
