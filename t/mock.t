@@ -1,8 +1,9 @@
 #!/usr/bin/perl -T
+
 use strict;
 use warnings;
 
-use Test::More tests => 19;
+use Test::More tests => 15;
 use Test::Fatal;
 
 BEGIN { use_ok 'Test::Mocha' }
@@ -13,17 +14,20 @@ use Types::Standard   qw( Int );
 
 # ----------------------
 # creating a mock
+
 my $mock = mock();
 ok $mock, 'mock() creates a simple mock';
 
 # ----------------------
 # mocks pretend to be anything you want
+
 ok $mock->isa('Bar'),  'mock can isa(anything)';
 ok $mock->does('Baz'), 'mock can does(anything)';
 ok $mock->DOES('Baz'), 'mock can DOES(anything)';
 
 # ----------------------
-# mocks accept any methods call on them
+# mocks accept any method calls
+
 my $calls   = getattr($mock, 'calls');
 my $coderef = $mock->can('foo');
 ok $coderef,                    'mock can(anything)';
@@ -33,8 +37,6 @@ is $calls->[-1]->stringify,
     sprintf('foo(1) called at %s line %d', __FILE__, __LINE__ - 2),
     ' and method call is recorded';
 
-ok !$mock->can('CARP_TRACE'), 'mock cannot(CARP_TRACE)';
-
 is $mock->foo(bar => 1), undef,
     'mock accepts any method call, returning undef by default';
 is $calls->[-1]->stringify,
@@ -43,20 +45,13 @@ is $calls->[-1]->stringify,
 
 # ----------------------
 # type constraints
+
 my $e = exception { $mock->foo(1, Int) };
 like $e, qr/Int/,
     'mock does not accept method call with type constraint argument';
 like $e, qr/mock\.t/, ' and message traces back to this script';
 
 is $mock->foo(1, mock), undef, 'mock as method argument not isa(Type::Tiny)';
-
-# ----------------------
-# calling mock with a ref
-stub($mock)->ref->returns('Foo');
-is $mock->ref, 'Foo', 'mock has a ref';
-is ref($mock), 'Foo', ' and ref() returns the class';
-
-is( ($calls->[-1]->caller)[0], __FILE__, ' and caller is not UNIVERSAL::ref' );
 
 $mock->DESTROY;
 isnt $calls->[-1]->stringify, 'DESTROY()', 'DESTROY() is not AUTOLOADed';

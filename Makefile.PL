@@ -41,7 +41,7 @@ my %WriteMakefileArgs = (
     "Test::Requires" => 0,
     "version" => "0.77"
   },
-  "VERSION" => "0.21_01",
+  "VERSION" => "0.21_02",
   "test" => {
     "TESTS" => "t/*.t t/partialdump/*.t"
   }

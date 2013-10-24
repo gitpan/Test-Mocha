@@ -1,16 +1,16 @@
 package Test::Mocha::Stub;
 {
-  $Test::Mocha::Stub::VERSION = '0.21_01';
+  $Test::Mocha::Stub::VERSION = '0.21_02';
 }
 # ABSTRACT: Mock wrapper to create method stubs
 
 use strict;
 use warnings;
 
-use Carp qw( croak );
+use Carp                qw( croak );
 use Test::Mocha::MethodStub;
 use Test::Mocha::Types  qw( Mock Slurpy );
-use Test::Mocha::Util   qw( extract_method_name getattr );
+use Test::Mocha::Util   qw( extract_method_name getattr has_caller_package );
 use Types::Standard     qw( ArrayRef HashRef );
 
 our $AUTOLOAD;
@@ -58,6 +58,31 @@ sub AUTOLOAD {
     unshift @{ $stubs->{$method_name} }, $stub;
 
     return $stub;
+}
+
+# Let AUTOLOAD() handle the UNIVERSAL methods
+
+sub isa {
+    # uncoverable pod
+    $AUTOLOAD = 'isa';
+    goto &AUTOLOAD;
+}
+
+sub DOES {
+    # uncoverable pod
+    $AUTOLOAD = 'DOES';
+    goto &AUTOLOAD;
+}
+
+sub can {
+    # uncoverable pod
+    my ($self, $method_name) = @_;
+
+    # Handle can('CARP_TRACE') for internal croak()'s (Carp v1.32+)
+    return if has_caller_package(__PACKAGE__);
+
+    $AUTOLOAD = 'can';
+    goto &AUTOLOAD;
 }
 
 # Don't let AUTOLOAD() handle DESTROY()

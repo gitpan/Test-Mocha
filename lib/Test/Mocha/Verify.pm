@@ -1,6 +1,6 @@
 package Test::Mocha::Verify;
 {
-  $Test::Mocha::Verify::VERSION = '0.21_01';
+  $Test::Mocha::Verify::VERSION = '0.21_02';
 }
 # ABSTRACT: Mock wrapper to verify method calls
 
@@ -109,6 +109,26 @@ sub AUTOLOAD {
         unless $test_ok;
 
     return;
+}
+
+# Let AUTOLOAD() handle the UNIVERSAL methods
+
+sub isa {
+    # uncoverable pod
+    $AUTOLOAD = 'isa';
+    goto &AUTOLOAD;
+}
+
+sub DOES {
+    # uncoverable pod
+    $AUTOLOAD = 'DOES';
+    goto &AUTOLOAD;
+}
+
+sub can {
+    # uncoverable pod
+    $AUTOLOAD = 'can';
+    goto &AUTOLOAD;
 }
 
 # Don't let AUTOLOAD() handle DESTROY()
