@@ -50,10 +50,11 @@
       },
       "runtime" : {
          "requires" : {
-            "Carp" : "0",
+            "Carp" : "1.22",
             "Exporter" : "0",
             "Scalar::Util" : "0",
             "Test::Builder" : "0",
+            "Try::Tiny" : "0",
             "Type::Library" : "0",
             "Type::Utils" : "0",
             "Types::Standard" : "0.008",
@@ -79,7 +80,7 @@
    "provides" : {
       "Test::Mocha" : {
          "file" : "lib/Test/Mocha.pm",
-         "version" : "0.21_02"
+         "version" : "0.49_01"
       }
    },
    "release_status" : "testing",
@@ -95,7 +96,7 @@
          "web" : "https://github.com/stevenl/Test-Mocha"
       }
    },
-   "version" : "0.21_02",
+   "version" : "0.49_01",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018000"

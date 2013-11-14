@@ -1,6 +1,6 @@
 package Test::Mocha::Stub;
 {
-  $Test::Mocha::Stub::VERSION = '0.21_02';
+  $Test::Mocha::Stub::VERSION = '0.49_01';
 }
 # ABSTRACT: Mock wrapper to create method stubs
 
@@ -50,8 +50,8 @@ sub AUTOLOAD {
         args => \@args,
     );
 
-    my $mock  = getattr($self, 'mock');
-    my $stubs = getattr($mock, 'stubs');
+    my $mock  = getattr( $self, 'mock'  );
+    my $stubs = getattr( $mock, 'stubs' );
 
     # add new stub to front of queue so that it takes precedence
     # over existing stubs that would satisfy the same invocations

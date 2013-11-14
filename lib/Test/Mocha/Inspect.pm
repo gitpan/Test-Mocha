@@ -1,6 +1,6 @@
 package Test::Mocha::Inspect;
 {
-  $Test::Mocha::Inspect::VERSION = '0.21_02';
+  $Test::Mocha::Inspect::VERSION = '0.49_01';
 }
 # ABSTRACT: Mock wrapper to inspect method calls
 
@@ -28,8 +28,8 @@ sub AUTOLOAD {
         args => \@_,
     );
 
-    my $mock  = getattr($self, 'mock');
-    my $calls = getattr($mock, 'calls');
+    my $mock  = getattr( $self, 'mock'  );
+    my $calls = getattr( $mock, 'calls' );
 
     return grep { $inspect->satisfied_by($_) } @$calls;
 }

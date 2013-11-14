@@ -20,10 +20,11 @@ my %WriteMakefileArgs = (
   "LICENSE" => "perl",
   "NAME" => "Test::Mocha",
   "PREREQ_PM" => {
-    "Carp" => 0,
+    "Carp" => "1.22",
     "Exporter" => 0,
     "Scalar::Util" => 0,
     "Test::Builder" => 0,
+    "Try::Tiny" => 0,
     "Type::Library" => 0,
     "Type::Utils" => 0,
     "Types::Standard" => "0.008",
@@ -41,9 +42,9 @@ my %WriteMakefileArgs = (
     "Test::Requires" => 0,
     "version" => "0.77"
   },
-  "VERSION" => "0.21_02",
+  "VERSION" => "0.49_01",
   "test" => {
-    "TESTS" => "t/*.t t/partialdump/*.t"
+    "TESTS" => "t/*.t t/backwards/*.t"
   }
 );
 

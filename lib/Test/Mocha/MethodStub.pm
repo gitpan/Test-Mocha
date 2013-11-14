@@ -1,6 +1,6 @@
 package Test::Mocha::MethodStub;
 {
-  $Test::Mocha::MethodStub::VERSION = '0.21_02';
+  $Test::Mocha::MethodStub::VERSION = '0.49_01';
 }
 # ABSTRACT: Objects to represent stubbed methods with arguments and responses
 
@@ -23,10 +23,18 @@ sub new {
     return $self;
 }
 
+sub cast {
+    # """Convert the type of the given object to this class"""
+    # uncoverable pod
+    my ( $class, $obj ) = @_;
+    $obj->{executions} = [];
+    return bless $obj, $class;
+}
+
 sub returns {
     # """Adds a return response to the end of the executions queue."""
     # uncoverable pod
-    my ($self, @return_values) = @_;
+    my ( $self, @return_values ) = @_;
 
     push @{ $self->{executions} },
         @return_values == 1 ? sub { $return_values[0] } :
@@ -36,10 +44,10 @@ sub returns {
     return $self;
 }
 
-sub dies {
-    # """Adds a die response to the end of the executions queue."""
+sub throws {
+    # """Adds an exception response to the end of the executions queue."""
     # uncoverable pod
-    my ($self, @exception) = @_;
+    my ( $self, @exception ) = @_;
 
     push @{ $self->{executions} },
         # check if first arg is a throwable exception
@@ -53,7 +61,7 @@ sub dies {
 sub executes {
     # """Adds a callback response to the end of the executions queue."""
     # uncoverable pod
-    my ($self, $callback) = @_;
+    my ( $self, $callback ) = @_;
 
     croak 'executes() must be given a coderef'
         unless ref($callback) eq 'CODE';
@@ -66,7 +74,7 @@ sub executes {
 sub do_next_execution {
     # """Executes the next response."""
     # uncoverable pod
-    my ($self, @args) = @_;
+    my ( $self, @args ) = @_;
     my $executions = $self->{executions};
 
     # return undef by default
