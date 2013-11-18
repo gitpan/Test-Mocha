@@ -3,7 +3,7 @@ use warnings;
 
 package Test::Mocha;
 {
-  $Test::Mocha::VERSION = '0.49_01';
+  $Test::Mocha::VERSION = '0.50';
 }
 # ABSTRACT: Test Spy/Stub Framework
 
@@ -198,7 +198,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.49_01
+version 0.50
 
 =head1 SYNOPSIS
 

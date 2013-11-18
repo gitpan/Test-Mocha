@@ -80,10 +80,10 @@
    "provides" : {
       "Test::Mocha" : {
          "file" : "lib/Test/Mocha.pm",
-         "version" : "0.49_01"
+         "version" : "0.50"
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "mailto" : "bug-Test-Mocha@rt.cpan.org",
@@ -96,7 +96,7 @@
          "web" : "https://github.com/stevenl/Test-Mocha"
       }
    },
-   "version" : "0.49_01",
+   "version" : "0.50",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018000"

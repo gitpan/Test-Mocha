@@ -1,6 +1,6 @@
 package Test::Mocha::MethodStub;
 {
-  $Test::Mocha::MethodStub::VERSION = '0.49_01';
+  $Test::Mocha::MethodStub::VERSION = '0.50';
 }
 # ABSTRACT: Objects to represent stubbed methods with arguments and responses
 

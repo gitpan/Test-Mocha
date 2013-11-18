@@ -1,6 +1,6 @@
 package Test::Mocha::Method;
 {
-  $Test::Mocha::Method::VERSION = '0.49_01';
+  $Test::Mocha::Method::VERSION = '0.50';
 }
 # ABSTRACT: Objects to represent methods and their arguuments
 

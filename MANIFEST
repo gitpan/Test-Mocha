@@ -32,7 +32,6 @@ t/inspect_all.t
 t/matcher_moose.t
 t/matcher_typetiny.t
 t/mock.t
-t/mockito_tutorial.t
 t/partialdump.t
 t/release-no-tabs.t
 t/release-pod-coverage.t
