@@ -1,12 +1,12 @@
 #!perl
 
 BEGIN {
-  unless ($ENV{RELEASE_TESTING}) {
-    require Test::More;
-    Test::More::plan(skip_all => 'these tests are for release candidate testing');
-  }
+    unless ( $ENV{RELEASE_TESTING} ) {
+        require Test::More;
+        Test::More::plan(
+            skip_all => 'these tests are for release candidate testing' );
+    }
 }
-
 
 use Test::More;
 
@@ -20,4 +20,5 @@ plan skip_all => "Pod::Coverage::TrustPod required for testing POD coverage"
 
 # test public modules only
 plan tests => 1;
-pod_coverage_ok('Test::Mocha', {coverage_class => 'Pod::Coverage::TrustPod'})
+pod_coverage_ok( 'Test::Mocha',
+    { coverage_class => 'Pod::Coverage::TrustPod' } )

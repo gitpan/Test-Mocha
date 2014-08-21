@@ -1,19 +1,13 @@
 package Test::Mocha::MethodCall;
-{
-  $Test::Mocha::MethodCall::VERSION = '0.50';
-}
 # ABSTRACT: Objects to represent method calls
-
+$Test::Mocha::MethodCall::VERSION = '0.60';
 use strict;
 use warnings;
-
-use Test::Mocha::Method;
-
-our @ISA = qw( Test::Mocha::Method );
+use parent qw( Test::Mocha::Method );
 
 sub new {
     # uncoverable pod
-    my ($class, %args) = @_;
+    my ( $class, %args ) = @_;
     # caller should be an arrayref tuple [file, line]
     ### assert: defined $args{invocant}
     ### assert: defined $args{caller}
@@ -26,19 +20,16 @@ sub invocant {
     return $_[0]->{invocant};
 }
 
-sub caller {
-    # uncoverable pod
+sub caller {  ## no critic (ProhibitBuiltinHomonyms)
+              # uncoverable pod
     return @{ $_[0]->{caller} };
 }
 
 sub stringify_long {
     # uncoverable pod
-    my ( $self ) = @_;
-    return sprintf(
-        '%s called at %s line %d',
-        $self->SUPER::stringify,
-        $self->caller,
-    );
+    my ($self) = @_;
+    return sprintf '%s called at %s line %d',
+      $self->SUPER::stringify, $self->caller;
 }
 
 1;

@@ -1,24 +1,19 @@
 package Test::Mocha::MethodStub;
-{
-  $Test::Mocha::MethodStub::VERSION = '0.50';
-}
 # ABSTRACT: Objects to represent stubbed methods with arguments and responses
-
+$Test::Mocha::MethodStub::VERSION = '0.60';
 use strict;
 use warnings;
+use parent qw( Test::Mocha::Method );
 
 use Carp qw( croak );
 use Scalar::Util qw( blessed );
-use Test::Mocha::Method;
-
-our @ISA = qw( Test::Mocha::Method );
 
 sub new {
     # uncoverable pod
     my $class = shift;
     my $self  = $class->SUPER::new(@_);
 
-    $self->{executions} = []; # ArrayRef[ CodeRef ]
+    $self->{executions} ||= [];  # ArrayRef[ CodeRef ]
 
     return $self;
 }
@@ -27,7 +22,7 @@ sub cast {
     # """Convert the type of the given object to this class"""
     # uncoverable pod
     my ( $class, $obj ) = @_;
-    $obj->{executions} = [];
+    $obj->{executions} ||= [];
     return bless $obj, $class;
 }
 
@@ -36,10 +31,13 @@ sub returns {
     # uncoverable pod
     my ( $self, @return_values ) = @_;
 
+    warnings::warnif( 'deprecated',
+        'returns() method is deprecated; use the returns() function instead' );
+
     push @{ $self->{executions} },
-        @return_values == 1 ? sub { $return_values[0] } :
-        @return_values  > 1 ? sub { @return_values    } :
-                              sub { };  # @return_values == 0
+        @return_values == 1 ? sub { $return_values[0] }
+      : @return_values > 1  ? sub { @return_values }
+      :                       sub { };                  # @return_values == 0
 
     return $self;
 }
@@ -49,11 +47,14 @@ sub throws {
     # uncoverable pod
     my ( $self, @exception ) = @_;
 
+    warnings::warnif( 'deprecated',
+        'throws() method is deprecated; use the throws() function instead' );
+
     push @{ $self->{executions} },
-        # check if first arg is a throwable exception
-        blessed($exception[0]) && $exception[0]->can('throw')
-          ? sub { $exception[0]->throw }
-          : sub { croak @exception     };
+      # check if first arg is a throwable exception
+      ( blessed( $exception[0] ) && $exception[0]->can('throw') )
+      ? sub { $exception[0]->throw }
+      : sub { croak @exception };
 
     return $self;
 }
@@ -63,8 +64,12 @@ sub executes {
     # uncoverable pod
     my ( $self, $callback ) = @_;
 
+    warnings::warnif( 'deprecated',
+        'executes() method is deprecated; use the executes() function instead'
+    );
+
     croak 'executes() must be given a coderef'
-        unless ref($callback) eq 'CODE';
+      unless ref($callback) eq 'CODE';
 
     push @{ $self->{executions} }, $callback;
 
@@ -78,13 +83,12 @@ sub do_next_execution {
     my $executions = $self->{executions};
 
     # return undef by default
-    return if @$executions == 0;
+    return if @{$executions} == 0;
 
     # shift the next execution off the front of the queue
     # ... except for the last one
-    my $execution = @$executions > 1
-        ? shift(@$executions)
-        : $executions->[0];
+    my $execution =
+      @{$executions} > 1 ? shift( @{$executions} ) : $executions->[0];
 
     return $execution->(@args);
 }

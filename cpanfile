@@ -10,6 +10,7 @@ requires "UNIVERSAL::ref" => "0";
 requires "constant" => "0";
 requires "experimental" => "0";
 requires "overload" => "0";
+requires "parent" => "0";
 requires "perl" => "5.010001";
 requires "strict" => "0";
 requires "warnings" => "0";
@@ -33,4 +34,5 @@ on 'develop' => sub {
   requires "Test::More" => "0";
   requires "Test::NoTabs" => "0";
   requires "Test::Pod" => "1.41";
+  requires "Type::Tiny::XS" => "0";
 };

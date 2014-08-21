@@ -1,22 +1,19 @@
 package Test::Mocha::Verify;
-{
-  $Test::Mocha::Verify::VERSION = '0.50';
-}
-# ABSTRACT: Mock wrapper to verify method calls
-
+# ABSTRACT: Mock wrapper to verify method calls (DEPRECATED)
+$Test::Mocha::Verify::VERSION = '0.60';
 use strict;
 use warnings;
 
 use Test::Mocha::MethodCall;
 use Test::Mocha::Types qw( Mock NumRange );
-use Test::Mocha::Util  qw( extract_method_name is_called );
-use Types::Standard    qw( Num Str );
+use Test::Mocha::Util qw( extract_method_name has_caller_package is_called );
+use Types::Standard qw( Num Str );
 
 our $AUTOLOAD;
 
 sub new {
     # uncoverable pod
-    my ($class, %args) = @_;
+    my ( $class, %args ) = @_;
 
     ### assert: defined $args{mock} && Mock->check( $args{mock} )
     ### assert: !defined $args{ test_name } || Str->check( $args{ test_name } )
@@ -30,14 +27,24 @@ sub new {
 }
 
 sub AUTOLOAD {
-    my $self = shift;
+    my ( $self, @args ) = @_;
 
     my $method_call = Test::Mocha::MethodCall->new(
         invocant => $self->{mock},
-        name => extract_method_name($AUTOLOAD),
-        args => \@_,
+        name     => extract_method_name($AUTOLOAD),
+        args     => \@args,
     );
-    is_called( $method_call, %$self );
+
+    my ($class) =
+      grep { defined $self->{$_} } qw{ times at_least at_most between };
+    my %options = (
+        times    => 'Test::Mocha::CalledOk::Times',
+        at_least => 'Test::Mocha::CalledOk::AtLeast',
+        at_most  => 'Test::Mocha::CalledOk::AtMost',
+        between  => 'Test::Mocha::CalledOk::Between',
+    );
+
+    $options{$class}->test( $method_call, $self->{$class}, $self->{test_name} );
     return;
 }
 
@@ -56,7 +63,10 @@ sub DOES {
 }
 
 sub can {
+    # Handle can('CARP_TRACE') for internal croak()'s (Carp v1.32+)
     # uncoverable pod
+    return if has_caller_package(__PACKAGE__);
+
     $AUTOLOAD = 'can';
     goto &AUTOLOAD;
 }

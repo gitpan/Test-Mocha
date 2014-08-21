@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+no warnings 'deprecated';
 
 use Test::More tests => 18;
 
@@ -11,26 +12,26 @@ use Test::Mocha::Util qw( getattr );
 
 my $mock = mock;
 
-ok( ( stub { $mock->isa('Foo') } returns 0 ), 'isa() can be stubbed' );
+ok( ( stub { $mock->isa('Foo') } )->returns(0), 'isa() can be stubbed' );
 ok( !$mock->isa('Foo'), '... and called' );
-called_ok { $mock->isa('Foo') } '... and verified';
+verify( $mock, '... and verified' )->isa('Foo');
 
-ok( ( stub { $mock->DOES('Bar') } returns 0 ), 'DOES() can be stubbed' );
+ok( ( stub { $mock->DOES('Bar') } )->returns(0), 'DOES() can be stubbed' );
 ok( !$mock->DOES('Bar'), '... and called' );
-called_ok { $mock->DOES('Bar') } '... and verified';
+verify( $mock, '... and verified' )->DOES('Bar');
 
-ok( ( stub { $mock->does('Baz') } returns 0 ), 'does() can be stubbed' );
+ok( ( stub { $mock->does('Baz') } )->returns(0), 'does() can be stubbed' );
 ok( !$mock->does('Baz'), '... and called' );
-called_ok { $mock->does('Baz') } '... and verified';
+verify( $mock, '... and verified' )->does('Baz');
 
-ok( ( stub { $mock->can('foo') } returns undef ), 'can() can be stubbed' );
+ok( ( stub { $mock->can('foo') } )->returns(undef), 'can() can be stubbed' );
 ok( !$mock->can('foo'), '... and called' );
-called_ok { $mock->can('foo') } '... and verified';
+verify( $mock, '... and verified' )->can('foo');
 
-ok( ( stub { $mock->ref } returns 'Foo' ), 'ref() can be stubbed' );
+ok( ( stub { $mock->ref } )->returns('Foo'), 'ref() can be stubbed' );
 is( $mock->ref, 'Foo', '... and called as a method' );
 is( ref($mock), 'Foo', '... or as a function' );
-called_ok { $mock->ref } times(2), '... and verified';
+verify( $mock, times => 2, '... and verified' )->ref;
 
 # Ensure UNIVERSAL::ref is not recorded as caller when it intercepts the call
 my $calls = getattr( $mock, 'calls' );

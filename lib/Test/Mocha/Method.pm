@@ -1,22 +1,19 @@
 package Test::Mocha::Method;
-{
-  $Test::Mocha::Method::VERSION = '0.50';
-}
 # ABSTRACT: Objects to represent methods and their arguuments
-
+$Test::Mocha::Method::VERSION = '0.60';
 use strict;
 use warnings;
 
 use Carp qw( croak );
 use Test::Mocha::PartialDump;
 use Test::Mocha::Types qw( Matcher Slurpy );
-use Test::Mocha::Util  qw( match );
-use Types::Standard    qw( ArrayRef HashRef Str );
+use Test::Mocha::Util qw( match );
+use Types::Standard qw( ArrayRef HashRef Str );
 
 use overload '""' => \&stringify, fallback => 1;
 
 # cause string overloaded objects (Matchers) to be stringified
-my $Dumper = Test::Mocha::PartialDump->new(objects => 0, stringify => 1);
+my $Dumper = Test::Mocha::PartialDump->new( objects => 0, stringify => 1 );
 
 sub new {
     # uncoverable pod
@@ -42,11 +39,11 @@ sub stringify {
     # you'd type in Perl.
     # """
     # uncoverable pod
-    my ( $self ) = @_;
-    return $self->name . '(' . $Dumper->dump($self->args) . ')';
+    my ($self) = @_;
+    return $self->name . '(' . $Dumper->dump( $self->args ) . ')';
 }
 
-my $slurp = sub {
+my $Slurp = sub {
     # """check slurpy arguments"""
     my ( $slurpy_matcher, @to_match ) = @_;
 
@@ -55,14 +52,14 @@ my $slurp = sub {
 
     my $value;
     if ( $matcher->is_a_type_of(ArrayRef) ) {
-        $value = [ @to_match ];
+        $value = [@to_match];
     }
     elsif ( $matcher->is_a_type_of(HashRef) ) {
         return unless scalar(@to_match) % 2 == 0;
-        $value = { @to_match };
+        $value = {@to_match};
     }
     else {
-        croak('Slurpy argument must be a type of ArrayRef or HashRef');
+        croak 'Slurpy argument must be a type of ArrayRef or HashRef';
     }
 
     return $matcher->check($value);
@@ -87,9 +84,9 @@ sub satisfied_by {
 
         if ( Slurpy->check($matcher) ) {
             croak 'No arguments allowed after a slurpy type constraint'
-                unless @expected == 0;
+              unless @expected == 0;
 
-            return unless $slurp->( $matcher, @input );
+            return unless $Slurp->( $matcher, @input );
 
             @input = ();
         }
@@ -102,14 +99,14 @@ sub satisfied_by {
     }
 
     # slurpy matcher should handle empty argument lists
-    if ( @expected > 0 && Slurpy->check($expected[0]) ) {
+    if ( @expected > 0 && Slurpy->check( $expected[0] ) ) {
         my $matcher = shift @expected;
 
         croak 'No arguments allowed after a slurpy type constraint'
-            unless @expected == 0;
+          unless @expected == 0;
 
         # uncoverable branch true
-        return unless $slurp->( $matcher, @input );
+        return unless $Slurp->( $matcher, @input );
     }
 
     return @input == 0 && @expected == 0;

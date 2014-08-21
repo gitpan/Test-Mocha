@@ -2,189 +2,314 @@ use strict;
 use warnings;
 
 package Test::Mocha;
-{
-  $Test::Mocha::VERSION = '0.50';
-}
 # ABSTRACT: Test Spy/Stub Framework
+$Test::Mocha::VERSION = '0.60';
 
-
-use Carp     qw( croak );
+use Carp qw( croak );
 use Exporter qw( import );
+use Scalar::Util qw( blessed );
+use Test::Mocha::CalledOk::Times;
+use Test::Mocha::CalledOk::AtLeast;
+use Test::Mocha::CalledOk::AtMost;
+use Test::Mocha::CalledOk::Between;
 use Test::Mocha::Mock;
 use Test::Mocha::Types 'NumRange', Mock => { -as => 'MockType' };
 use Test::Mocha::Util qw( getattr get_method_call is_called );
-use Types::Standard   qw( ArrayRef HashRef Num slurpy );
+use Types::Standard qw( ArrayRef HashRef Num slurpy );
 
 our @EXPORT = qw(
-    mock
-    stub
-    called_ok
-    verify
-    inspect
-    inspect_all
-    clear
-    SlurpyArray
-    SlurpyHash
+  mock
+  stub
+  returns
+  throws
+  executes
+  called_ok
+  times
+  atleast
+  atmost
+  between
+  verify
+  inspect
+  inspect_all
+  clear
+  SlurpyArray
+  SlurpyHash
 );
 
 # croak() messages should not trace back to Mocha modules
 $Carp::Internal{$_}++ foreach qw(
-    Test::Mocha
-    Test::Mocha::Inspect
-    Test::Mocha::Mock
-    Test::Mocha::Util
-    Test::Mocha::Verify
+  Test::Mocha
+  Test::Mocha::CalledOk
+  Test::Mocha::Inspect
+  Test::Mocha::Mock
+  Test::Mocha::Util
+  Test::Mocha::MethodStub
+  Test::Mocha::Verify
 );
-
-
-use constant {
-    SlurpyArray => slurpy(ArrayRef),
-    SlurpyHash  => slurpy(HashRef),
-};
-
 
 sub mock {
     return Test::Mocha::Mock->new(@_);
 }
 
+sub stub (&@) {
+    my ( $arg, @executions ) = @_;
 
-sub stub {
-    my ( $arg ) = @_;
-
-    if ( defined $arg ) {
-        if ( MockType->check($arg) ) {
-            warnings::warnif(
-                'deprecated',
-                'Calling stub() with a mock object parameter is deprecated; pass it a coderef instead'
-            );
-            require Test::Mocha::Stub;
-            return Test::Mocha::Stub->new( mock => $arg );
-        }
-        elsif ( ref($arg) eq 'CODE' ) {
-            $Test::Mocha::Mock::num_method_calls = 0;
-            my $method_call = get_method_call($arg);
-            my $stubs = getattr( $method_call->invocant, 'stubs' );
-            unshift @{ $stubs->{ $method_call->name } }, $method_call;
-
-            return Test::Mocha::MethodStub->cast( $method_call );
-        }
+    foreach (@executions) {
+        croak 'stub() responses should be supplied using ',
+          'returns(), throws() or executes()'
+          if ref ne 'CODE';
     }
-    croak 'stub() must be given a coderef';
-}
-
-
-sub called_ok {
-    my ( $coderef, %options ) = _get_called_ok_args(@_);
-
-    croak 'called_ok() must be given a coderef'
-        unless defined($coderef) && ref($coderef) eq 'CODE';
 
     $Test::Mocha::Mock::num_method_calls = 0;
-    is_called( get_method_call($coderef), %options );
+    my $method_call = get_method_call($arg);
+    my $stubs = getattr( $method_call->invocant, 'stubs' );
+    unshift @{ $stubs->{ $method_call->name } }, $method_call;
+
+    Test::Mocha::MethodStub->cast($method_call);
+    push @{ getattr( $method_call, 'executions' ) }, @executions;
+    return $method_call;  # for backwards compatibility
+}
+
+sub returns (@) {
+    my (@return_values) = @_;
+    return sub { $return_values[0] }
+      if @return_values == 1;
+    return sub { @return_values }
+      if @return_values > 1;
+    return sub { };       # if @return_values == 0
+}
+
+sub throws (@) {
+    my (@exception) = @_;
+
+    # check if first arg is a throwable exception
+    return sub { $exception[0]->throw }
+      if blessed( $exception[0] ) && $exception[0]->can('throw');
+
+    return sub { croak @exception };
+
+}
+
+sub executes (&) {
+    my ($callback) = @_;
+    return $callback;
+}
+
+## no critic (RequireArgUnpacking,ProhibitMagicNumbers)
+sub called_ok (&;@) {
+    my $coderef = shift;
+    my $called_ok;
+    my $class;
+    my $value;
+    my $test_name;
+
+    # unpack the args - different possibilities due to backwards compatibility
+    if ( @_ == 1 ) {
+        if ( ref $_[0] eq 'CODE' ) {
+            $called_ok = $_[0];
+        }
+        else {
+            $test_name = $_[0];
+        }
+    }
+    elsif ( @_ == 2 ) {
+        if ( ref $_[0] eq 'CODE' ) {
+            ( $called_ok, $test_name ) = @_;
+        }
+        else {
+            ( $class, $value ) = @_;
+        }
+    }
+    elsif ( @_ == 3 ) {
+        ( $class, $value, $test_name ) = @_;
+    }
+
+    $Test::Mocha::Mock::num_method_calls = 0;
+    my $method_call = get_method_call($coderef);
+
+    # v0.50 behaviour
+    if ( defined $class ) {
+        my %options = (
+            times    => 'Test::Mocha::CalledOk::Times',
+            atleast  => 'Test::Mocha::CalledOk::AtLeast',
+            atmost   => 'Test::Mocha::CalledOk::AtMost',
+            at_least => 'Test::Mocha::CalledOk::AtLeast',
+            at_most  => 'Test::Mocha::CalledOk::AtMost',
+            between  => 'Test::Mocha::CalledOk::Between',
+        );
+        croak "called_ok() was given an invalid option: '$class'"
+          unless defined $options{$class};
+
+        if ( $class ne 'between' ) {
+            croak "'$class' option must be a number"
+              unless Num->check($value);
+        }
+        else {
+            croak "'$class' option must be an arrayref "
+              . 'with 2 numbers in ascending order'
+              unless NumRange->check($value);
+        }
+
+        $options{$class}->test( $method_call, $value, $test_name );
+        return;
+    }
+
+    # current behaviour
+    ## no critic (ProhibitAmpersandSigils)
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+    $called_ok ||= &times(1);  # default if no times() is specified
+    $called_ok->( $method_call, $test_name );
     return;
+}
+## use critic
+
+## no critic (ProhibitBuiltinHomonyms)
+sub times ($) {
+    my ($n) = @_;
+    croak 'times() must be given a number'
+      unless Num->check($n);
+
+    return sub {
+        my ( $method_call, $test_name ) = @_;
+        Test::Mocha::CalledOk::Times->test( $method_call, $n, $test_name );
+    };
+}
+## use critic
+
+sub atleast ($) {
+    my ($n) = @_;
+    croak 'atleast() must be given a number'
+      unless Num->check($n);
+
+    return sub {
+        my ( $method_call, $test_name ) = @_;
+        Test::Mocha::CalledOk::AtLeast->test( $method_call, $n, $test_name );
+    };
+}
+
+sub atmost ($) {
+    my ($n) = @_;
+    croak 'atmost() must be given a number'
+      unless Num->check($n);
+
+    return sub {
+        my ( $method_call, $test_name ) = @_;
+        Test::Mocha::CalledOk::AtMost->test( $method_call, $n, $test_name );
+    };
+}
+
+sub between ($$) {
+    my ( $lower, $upper ) = @_;
+    croak 'between() must be given 2 numbers in ascending order'
+      unless NumRange->check( [ $lower, $upper ] );
+
+    return sub {
+        my ( $method_call, $test_name ) = @_;
+        Test::Mocha::CalledOk::Between->test( $method_call, [ $lower, $upper ],
+            $test_name );
+    };
 }
 
 # verify() has been retained for backwards compatibility only
 
-sub verify {
+sub verify ($;@) {
     # uncoverable pod
     my ( $mock, %options ) = _get_called_ok_args(@_);
 
-    warnings::warnif(
-        'deprecated',
-        'verify() is deprecated; use called_ok() instead'
-    );
+    warnings::warnif( 'deprecated',
+        'verify() is deprecated; use called_ok() instead' );
     croak 'verify() must be given a mock object'
-        unless defined($mock) && MockType->check($mock);
+      if !MockType->check($mock);
 
     require Test::Mocha::Verify;
     return Test::Mocha::Verify->new( mock => $mock, %options );
 }
 
+## no critic (RequireArgUnpacking)
 sub _get_called_ok_args {
     my $coderef = shift;
     my $test_name;
-    $test_name = pop if (@_ % 2 == 1);
+    $test_name = pop if ( @_ % 2 == 1 );
     my %options = @_;
 
     # set default option if none given
     $options{times} = 1 if keys %options == 0;
 
-    croak 'You can set only one of these options: '
-        . join ', ', map { "'$_'" } keys %options
-        unless keys %options == 1;
+    croak 'You can set only one of these options: ' . join ', ',
+      map { "'$_'" } keys %options
+      unless keys %options == 1;
 
+    ## no critic (ProhibitCascadingIfElse)
     if ( defined $options{times} ) {
         croak "'times' option must be a number"
-            unless Num->check( $options{times} );
+          unless Num->check( $options{times} );
     }
     elsif ( defined $options{at_least} ) {
         croak "'at_least' option must be a number"
-            unless Num->check( $options{at_least} );
+          unless Num->check( $options{at_least} );
     }
     elsif ( defined $options{at_most} ) {
         croak "'at_most' option must be a number"
-            unless Num->check( $options{at_most} );
+          unless Num->check( $options{at_most} );
     }
     elsif ( defined $options{between} ) {
         croak "'between' option must be an arrayref "
-            . "with 2 numbers in ascending order"
-            unless NumRange->check( $options{between} );
+          . 'with 2 numbers in ascending order'
+          unless NumRange->check( $options{between} );
     }
     else {
-        my ( $option ) = keys %options;
+        my ($option) = keys %options;
         croak "called_ok() was given an invalid option: '$option'";
     }
-    $options{ test_name } = $test_name if defined $test_name;
+    $options{test_name} = $test_name if defined $test_name;
 
     return ( $coderef, %options );
 }
+## use critic
 
+sub inspect (&) {
+    my ($arg) = @_;
 
-sub inspect {
-    my ( $arg ) = @_;
-
-    if ( defined $arg ) {
-        if ( MockType->check($arg) ) {
-            warnings::warnif(
-                'deprecated',
-                'Calling inspect() with a mock object parameter is deprecated; pass it a coderef instead'
-            );
-            require Test::Mocha::Inspect;
-            return Test::Mocha::Inspect->new( mock => $arg );
-        }
-        elsif ( ref($arg) eq 'CODE' ) {
-            $Test::Mocha::Mock::num_method_calls = 0;
-            my $method_call = get_method_call($arg);
-            my $mock        = $method_call->invocant;
-            my $calls       = getattr( $mock, 'calls' );
-            return grep { $method_call->satisfied_by($_) } @$calls;
-        }
-    }
-    croak 'inspect() must be given a coderef';
+    $Test::Mocha::Mock::num_method_calls = 0;
+    my $method_call = get_method_call($arg);
+    my $mock        = $method_call->invocant;
+    my $calls       = getattr( $mock, 'calls' );
+    return grep { $method_call->satisfied_by($_) } @{$calls};
 }
 
-
-sub inspect_all {
-    my ( $mock ) = @_;
+sub inspect_all ($) {
+    my ($mock) = @_;
 
     croak 'inspect_all() must be given a mock object'
-        unless defined $mock && MockType->check($mock);
+      if !MockType->check($mock);
 
     return @{ $mock->{calls} };
 }
 
-
-sub clear {
+sub clear (@) {
     my @mocks = @_;
 
+    ## no critic (ProhibitBooleanGrep)
     croak 'clear() must be given one or more mock objects'
-        if !@mocks || grep { ! MockType->check($_) } @mocks;
+      if !@mocks || grep { !MockType->check($_) } @mocks;
+    ## use critic
 
-    @{ getattr( $_, 'calls' ) } = ( ) foreach @mocks;
+    @{ getattr( $_, 'calls' ) } = () foreach @mocks;
 
     return;
 }
+
+## no critic (NamingConventions::Capitalization)
+sub SlurpyArray () {
+    # uncoverable pod
+    return slurpy(ArrayRef);
+}
+
+sub SlurpyHash () {
+    # uncoverable pod
+    return slurpy(HashRef);
+}
+## use critic
 
 1;
 
@@ -198,7 +323,7 @@ Test::Mocha - Test Spy/Stub Framework
 
 =head1 VERSION
 
-version 0.50
+version 0.60
 
 =head1 SYNOPSIS
 
@@ -213,23 +338,23 @@ other objects.
     my $warehouse = mock;
 
     # stub method calls (with type constraint for matching argument)
-    stub( sub { $warehouse->has_inventory($item1, Int) } )->returns(1);
+    stub { $warehouse->has_inventory($item1, Int) } returns 1;
 
     # execute the code under test
     my $order = Order->new(item => $item1, quantity => 50);
     $order->fill($warehouse);
 
     # verify interactions with the dependent object
-    ok( $order->is_filled, 'Order is filled' );
-    called_ok(
-        sub { $warehouse->remove_inventory($item1, 50) },
-        '... and inventory is removed'
-    );
+    ok $order->is_filled, 'Order is filled';
+    called_ok { $warehouse->remove_inventory($item1, 50) } '... and inventory is removed';
 
     # clear the invocation history
-    clear($warehouse);
+    clear $warehouse;
 
 =head1 DESCRIPTION
+
+B<The API may still be subject to change. I will try to keep it backwards
+compatible as much as possible.>
 
 We find all sorts of excuses to avoid writing tests for our code. Often it
 seems too hard to isolate the code we want to test from the objects it is
@@ -278,13 +403,13 @@ return C<undef> (in scalar context) or an empty list (in list context).
 You can stub C<ref()> to specify the value it should return (see below for
 more info about stubbing).
 
-    stub( sub{ $mock->ref } )->returns('AnyClass');
+    stub { $mock->ref } returns 'AnyClass';
     is( $mock->ref, 'AnyClass' );
     is( ref($mock), 'AnyClass' );
 
 =head2 stub
 
-    stub( sub { $mock->method(@args) } )->returns|throws|executes($response)
+    stub { $mock->method(@args) } returns(@values) | throws($exception) | executes($coderef)
 
 By default, the mock object already acts as a stub that accepts any method
 call and returns C<undef>. However, you can use C<stub()> to tell a method to
@@ -296,14 +421,14 @@ give an alternative response. You can specify 3 types of responses:
 
 Specifies that a stub should return 1 or more values.
 
-    stub( sub { $mock->method(@args) } )->returns(1, 2, 3);
+    stub { $mock->method(@args) } ) returns 1, 2, 3;
     is_deeply( [ $mock->method(@args) ], [ 1, 2, 3 ] );
 
 =item C<throws($message)>
 
 Specifies that a stub should raise an exception.
 
-    stub( sub { $mock->method(@args) } )->throws('exception');
+    stub { $mock->method(@args) } throws 'an error';
     ok( exception { $mock->method(@args) } );
 
 =item C<executes($coderef)>
@@ -313,11 +438,11 @@ in the method call are passed on to the callback.
 
     my @returns = qw( first second third );
 
-    stub( sub { $list->get(Int) } )->executes(sub {
+    stub { $list->get(Int) } executes {
         my ( $self, $i ) = @_;
         die "index out of bounds" if $i < 0;
         return $returns[$i];
-    });
+    };
 
     is( $list->get(0), 'first'  );
     is( $list->get(1), 'second' );
@@ -329,8 +454,8 @@ in the method call are passed on to the callback.
 A stub applies to the exact method and arguments specified (but see also
 L</"ARGUMENT MATCHING"> for a shortcut around this).
 
-    stub( sub { $list->get(0) } )->returns('first');
-    stub( sub { $list->get(1) } )->returns('second');
+    stub { $list->get(0) } returns 'first';
+    stub { $list->get(1) } returns 'second';
 
     is( $list->get(0), 'first'  );
     is( $list->get(1), 'second' );
@@ -338,11 +463,8 @@ L</"ARGUMENT MATCHING"> for a shortcut around this).
 
 Chain responses together to provide a consecutive series.
 
-    stub( sub { $iterator->next } )
-        ->returns(1)
-        ->returns(2)
-        ->returns(3)
-        ->throws('exhuasted');
+    stub { $iterator->next }
+      returns(1), returns(2), returns(3), throws('exhausted');
 
     ok( $iterator->next == 1 );
     ok( $iterator->next == 2 );
@@ -351,15 +473,15 @@ Chain responses together to provide a consecutive series.
 
 The last stubbed response will persist until it is overridden.
 
-    stub( sub { $warehouse->has_inventory($item, 10) } )->returns(1);
+    stub { $warehouse->has_inventory($item, 10) } returns 1;
     ok( $warehouse->has_inventory($item, 10) ) for 1 .. 5;
 
-    stub( sub { $warehouse->has_inventory($item, 10) } )->returns(0);
+    stub { $warehouse->has_inventory($item, 10) } returns '';
     ok( !$warehouse->has_inventory($item, 10) ) for 1 .. 5;
 
 =head2 called_ok
 
-    called_ok( sub { $mock->method(@args) }, [%option], [$test_name] )
+    called_ok { $mock->method(@args) } [ times($n) | atleast($n) | atmost($n) | between($m, $n) ], [$test_name]
 
 C<called_ok()> is used to test the interactions with the mock object. You can
 use it to verify that the correct method was called, with the correct set of
@@ -367,7 +489,7 @@ arguments, and the correct number of times. C<called_ok()> plays nicely with
 L<Test::Simple> and Co - it will print the test result along with your other
 tests and you must count calls to C<called_ok()> in your test plans.
 
-    called_ok( sub { $warehouse->remove($item, 50) } );
+    called_ok { $warehouse->remove($item, 50) };
     # prints: ok 1 - remove("book", 50) was called 1 time(s)
 
 An option may be specified to constrain the test.
@@ -379,23 +501,23 @@ An option may be specified to constrain the test.
 Specifies the number of times the given method is expected to be called.
 The default is 1 if no other option is specified.
 
-    called_ok( sub { $mock->method(@args) }, times => 3 )
+    called_ok { $mock->method(@args) } times(3);
     # prints: ok 1 - method(@args) was called 3 time(s)
 
-=item C<at_least>
+=item C<atleast>
 
 Specifies the minimum number of times the given method is expected to be
 called.
 
-    called_ok( sub { $mock->method(@args) }, at_least => 3 )
+    called_ok { $mock->method(@args) } atleast(3);
     # prints: ok 1 - method(@args) was called at least 3 time(s)
 
-=item C<at_most>
+=item C<atmost>
 
 Specifies the maximum number of times the given method is expected to be
 called.
 
-    called_ok( sub { $mock->method(@args) }, at_most => 5 )
+    called_ok { $mock->method(@args) } atmost(5);
     # prints: ok 1 - method(@args) was called at most 5 time(s)
 
 =item C<between>
@@ -403,7 +525,7 @@ called.
 Specifies the minimum and maximum number of times the given method is
 expected to be called.
 
-    called_ok( sub { $mock->method(@args) }, between => [3, 5] )
+    called_ok { $mock->method(@args) } between(3, 5);
     # prints: ok 1 - method(@args) was called between 3 and 5 time(s)
 
 =back
@@ -411,29 +533,22 @@ expected to be called.
 An optional C<$test_name> may be specified to be printed instead of the
 default.
 
-    called_ok(
-        sub { $warehouse->remove_inventory($item, 50) },
-        'inventory removed'
-    );
+    called_ok { $warehouse->remove_inventory($item, 50) } 'inventory removed';
     # prints: ok 1 - inventory removed
 
-    called_ok(
-        sub { $warehouse->remove_inventory($item, 50) },
-        times => 0,
-        'inventory not removed'
-    );
+    called_ok { $warehouse->remove_inventory($item, 50) } times(0), 'inventory not removed';
     # prints: ok 2 - inventory not removed
 
 =head2 inspect
 
-    @method_calls = inspect( sub { $mock->method(@args) } )
+    @method_calls = inspect { $mock->method(@args) };
 
-    ( $method_call ) = inspect( sub { $warehouse->remove_inventory(Str, Int) } );
+    ($method_call) = inspect { $warehouse->remove_inventory(Str, Int) };
 
-    is( $method_call->name,            'remove_inventory' );
-    is_deeply( [$method_call->args],   ['book', 50] );
-    is_deeply( [$method_call->caller], ['test.pl', 5] );
-    is( "$method_call", 'remove_inventory("book", 50) called at test.pl line 5' );
+    is $method_call->name,            'remove_inventory';
+    is_deeply [$method_call->args],   ['book', 50];
+    is_deeply [$method_call->caller], ['test.pl', 5];
+    is "$method_call", 'remove_inventory("book", 50) called at test.pl line 5';
 
 C<inspect()> returns a list of method calls matching the given method call
 specification. It can be useful for debugging failed C<called_ok()> calls.
@@ -462,19 +577,17 @@ They are also C<string> overloaded.
 
 =head2 inspect_all
 
-    @all_method_calls = inspect_all($mock)
+    @all_method_calls = inspect_all $mock
 
 C<inspect_all()> returns a list containing all methods called on the mock
 object. This is mainly used for debugging.
 
 =head2 clear
 
-    clear(@mocks)
+    clear $mock1, $mock2, ...
 
 Clears the method call history for one or more mocks so that they can be
 reused in another test. Note that this does not affect the stubbed methods.
-
-=for Pod::Coverage SlurpyArray SlurpyHash
 
 =for Pod::Coverage verify
 
@@ -494,12 +607,12 @@ L<MooseX::Types::Structured> will also work.)
     use Types::Standard qw( Any );
 
     my $mock = mock;
-    stub( sub { $mock->foo(Any) } )->returns('ok');
+    stub { $mock->foo(Any) } returns 'ok';
 
     print $mock->foo(1);        # prints: ok
     print $mock->foo('string'); # prints: ok
 
-    called_ok( sub { $mock->foo(Defined) }, times => 2 );
+    called_ok { $mock->foo(Defined) } times(2);
     # prints: ok 1 - foo(Defined) was called 2 time(s)
 
 You may use the normal features of the types: parameterized and structured
@@ -514,7 +627,7 @@ use coercions).
 
     # parameterized type
     # prints: ok 1 - set(Int, StrMatch[(?^:^foo)]) was called 1 time(s)
-    called_ok( sub { $list->set( Int, StrMatch[qr/^foo/] ) } );
+    called_ok { $list->set( Int, StrMatch[qr/^foo/] ) };
 
 =head2 Self-defined types
 
@@ -526,7 +639,7 @@ You may also use your own types, defined using L<Type::Utils>.
     my $positive_int = declare 'PositiveInt', as Int, where { $_ > 0 };
 
     # prints: ok 2 - set(PositiveInt, Any) was called 1 time(s)
-    called_ok( sub { $list->set($positive_int, Any) } );
+    called_ok { $list->set($positive_int, Any) };
 
 =head2 Argument slurping
 
@@ -534,20 +647,18 @@ C<SlurpyArray> and C<SlurpyHash> are special argument matchers exported by
 Test::Mocha that you can use when you don't care what arguments are used.
 They will just slurp up the remaining arguments as though they match.
 
-    called_ok( sub { $list->set(SlurpyArray) } );
-    called_ok( sub { $list->set(Int, SlurpyHash) } );
+    called_ok { $list->set(SlurpyArray) };
+    called_ok { $list->set(Int, SlurpyHash) };
 
 Because they consume the remaining arguments, you can't use further argument
 validators after them. But you can, of course, use them before. Note also that
 they will match empty argument lists.
 
+=for Pod::Coverage SlurpyArray SlurpyHash
+
 =head1 TO DO
 
 =over 4
-
-=item *
-
-Enhanced verifications
 
 =item *
 
@@ -583,9 +694,15 @@ L<Test::MockObject>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Steven Lee.
+This software is copyright (c) 2014 by Steven Lee.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
+
+=head1 DISCLAIMER OF WARRANTY
+
+THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 =cut

@@ -1,9 +1,6 @@
 package Test::Mocha::PartialDump;
-{
-  $Test::Mocha::PartialDump::VERSION = '0.50';
-}
 # ABSTRACT: Partial dumping of data structures, optimized for argument printing
-
+$Test::Mocha::PartialDump::VERSION = '0.60';
 # ===================================================================
 # This code was copied and adapted from Devel::PartialDump 0.15.
 #
@@ -18,38 +15,45 @@ use warnings;
 
 use Scalar::Util qw( looks_like_number reftype blessed );
 
+use constant {
+    ELLIPSIS     => '...',
+    ELLIPSIS_LEN => 3,
+};
+
 sub new {
     # uncoverable pod
     my ( $class, %args ) = @_;
 
     # attribute defaults
-    $args{ max_length   } = undef unless exists $args{ max_length   };
-    $args{ max_elements } = 6     unless exists $args{ max_elements };
-    $args{ max_depth    } = 2     unless exists $args{ max_depth    };
-    $args{ stringify    } = 0     unless exists $args{ stringify    };
-    $args{ pairs        } = 1     unless exists $args{ pairs        };
-    $args{ objects      } = 1     unless exists $args{ objects      };
-    $args{ list_delim   } = ', '  unless exists $args{ list_delim   };
-    $args{ pair_delim   } = ': '  unless exists $args{ pair_delim   };
+    ## no critic (ProhibitMagicNumbers)
+    $args{max_length}   = undef unless exists $args{max_length};
+    $args{max_elements} = 6     unless exists $args{max_elements};
+    $args{max_depth}    = 2     unless exists $args{max_depth};
+    $args{stringify}    = 0     unless exists $args{stringify};
+    $args{pairs}        = 1     unless exists $args{pairs};
+    $args{objects}      = 1     unless exists $args{objects};
+    $args{list_delim}   = ', '  unless exists $args{list_delim};
+    $args{pair_delim}   = ': '  unless exists $args{pair_delim};
+    ## use critic
 
     return bless \%args, $class;
 }
 
-sub dump {
-    # uncoverable pod
+sub dump {  ## no critic (ProhibitBuiltinHomonyms)
+            # uncoverable pod
     my ( $self, @args ) = @_;
 
-    my $method = "dump_as_"
-        . ( $self->should_dump_as_pairs(@args) ? "pairs" : "list" );
+    my $method =
+      'dump_as_' . ( $self->should_dump_as_pairs(@args) ? 'pairs' : 'list' );
 
-    my $dump = $self->$method(1, @args);
+    my $dump = $self->$method( 1, @args );
 
     if ( defined $self->{max_length}
-          and length($dump) > $self->{max_length}
-    ) {
-        my $max_length = $self->{max_length} - 3;
+        and length($dump) > $self->{max_length} )
+    {
+        my $max_length = $self->{max_length} - ELLIPSIS_LEN;
         $max_length = 0 if $max_length < 0;
-        substr( $dump, $max_length, length($dump) - $max_length, '...' );
+        substr $dump, $max_length, length($dump) - $max_length, ELLIPSIS;
     }
 
     return $dump;
@@ -61,10 +65,10 @@ sub should_dump_as_pairs {
 
     return unless $self->{pairs};
 
-    return if @what % 2 != 0; # must be an even list
+    return if @what % 2 != 0;  # must be an even list
 
-    for ( my $i = 0; $i < @what; $i += 2 ) {
-        return if ref $what[$i]; # plain strings are keys
+    for my $i ( grep { $_ % 2 == 0 } 0 .. @what ) {
+        return if ref $what[$i];  # plain strings are keys
     }
 
     return 1;
@@ -76,16 +80,16 @@ sub dump_as_pairs {
 
     my $truncated;
     if ( defined $self->{max_elements}
-          and ( @what / 2 ) > $self->{max_elements}
-    ) {
+        and ( @what / 2 ) > $self->{max_elements} )
+    {
         $truncated = 1;
-        @what = splice(@what, 0, $self->{max_elements} * 2 );
+        @what = splice @what, 0, $self->{max_elements} * 2;
     }
 
-    return join( $self->{list_delim},
-        $self->_dump_as_pairs($depth, @what),
-        ( $truncated ? "..." : () ),
-    );
+    return join
+      $self->{list_delim},
+      $self->_dump_as_pairs( $depth, @what ),
+      ( $truncated ? ELLIPSIS : () );
 }
 
 sub _dump_as_pairs {
@@ -96,9 +100,12 @@ sub _dump_as_pairs {
     my ( $key, $value, @rest ) = @what;
 
     return (
-        ( $self->format_key($depth, $key) . $self->{pair_delim}
-          . $self->format($depth, $value) ),
-        $self->_dump_as_pairs($depth, @rest),
+        (
+                $self->format_key( $depth, $key )
+              . $self->{pair_delim}
+              . $self->format( $depth, $value )
+        ),
+        $self->_dump_as_pairs( $depth, @rest ),
     );
 }
 
@@ -109,28 +116,34 @@ sub dump_as_list {
     my $truncated;
     if ( defined $self->{max_elements} and @what > $self->{max_elements} ) {
         $truncated = 1;
-        @what = splice(@what, 0, $self->{max_elements} );
+        @what = splice @what, 0, $self->{max_elements};
     }
 
-    return join( $self->{list_delim},
-        ( map { $self->format($depth, $_) } @what ),
-        ( $truncated ? "..." : () ),
-    );
+    return join
+      $self->{list_delim},
+      ( map { $self->format( $depth, $_ ) } @what ),
+      ( $truncated ? ELLIPSIS : () );
 }
 
-sub format {
-    # uncoverable pod
+sub format {  ## no critic (ProhibitBuiltinHomonyms)
+              # uncoverable pod
     my ( $self, $depth, $value ) = @_;
 
-    defined($value)
-        ? ( ref($value)
-            ? ( blessed($value)
-                ? $self->format_object($depth, $value)
-                : $self->format_ref($depth, $value) )
-            : ( looks_like_number($value)
-                ? $self->format_number($depth, $value)
-                : $self->format_string($depth, $value) ) )
-        : $self->format_undef($depth, $value),
+    return defined($value)
+      ? (
+        ref($value)
+        ? (
+            blessed($value)
+            ? $self->format_object( $depth, $value )
+            : $self->format_ref( $depth, $value )
+          )
+        : (
+            looks_like_number($value)
+            ? $self->format_number( $depth, $value )
+            : $self->format_string( $depth, $value )
+        )
+      )
+      : $self->format_undef( $depth, $value );
 }
 
 sub format_key {
@@ -145,17 +158,19 @@ sub format_ref {
 
     if ( $depth > $self->{max_depth} ) {
         return overload::StrVal($ref);
-    } else {
+    }
+    else {
         my $reftype = reftype($ref);
-           $reftype = 'SCALAR'
-                if $reftype eq 'REF' || $reftype eq 'LVALUE';
-        my $method = "format_" . lc $reftype;
+        $reftype = 'SCALAR'
+          if $reftype eq 'REF' || $reftype eq 'LVALUE';
+        my $method = 'format_' . lc $reftype;
 
         # uncoverable branch false
         if ( $self->can($method) ) {
             return $self->$method( $depth, $ref );
-        } else {
-            return overload::StrVal($ref); # uncoverable statement
+        }
+        else {
+            return overload::StrVal($ref);  # uncoverable statement
         }
     }
 }
@@ -164,35 +179,34 @@ sub format_array {
     # uncoverable pod
     my ( $self, $depth, $array ) = @_;
 
-    my $class = blessed($array) || '';
-    $class .= "=" if $class;
+    my $class = blessed($array) || q{};
+    $class .= q{=} if $class;
 
-    return $class . "[ " . $self->dump_as_list($depth + 1, @$array) . " ]";
+    return $class . '[ ' . $self->dump_as_list( $depth + 1, @{$array} ) . ' ]';
 }
 
 sub format_hash {
     # uncoverable pod
     my ( $self, $depth, $hash ) = @_;
 
-    my $class = blessed($hash) || '';
-    $class .= "=" if $class;
+    my $class = blessed($hash) || q{};
+    $class .= q{=} if $class;
 
-    return $class . "{ "
-      . $self->dump_as_pairs(
-            $depth + 1,
-            map { $_ => $hash->{$_} } sort keys %$hash
-        )
-      . " }";
+    return
+      $class . '{ '
+      . $self->dump_as_pairs( $depth + 1,
+        map { $_ => $hash->{$_} } sort keys %{$hash} )
+      . ' }';
 }
 
 sub format_scalar {
     # uncoverable pod
     my ( $self, $depth, $scalar ) = @_;
 
-    my $class = blessed($scalar) || '';
-    $class .= "=" if $class;
+    my $class = blessed($scalar) || q{};
+    $class .= q{=} if $class;
 
-    return $class . "\\" . $self->format($depth + 1, $$scalar);
+    return $class . q{\\} . $self->format( $depth + 1, ${$scalar} );
 }
 
 sub format_object {
@@ -200,8 +214,9 @@ sub format_object {
     my ( $self, $depth, $object ) = @_;
 
     if ( $self->{objects} ) {
-        return $self->format_ref($depth, $object);
-    } else {
+        return $self->format_ref( $depth, $object );
+    }
+    else {
         return $self->{stringify} ? "$object" : overload::StrVal($object);
     }
 }
@@ -214,22 +229,22 @@ sub format_number {
 
 sub format_string {
     # uncoverable pod
-    my ( $self, $depth, $str ) =@_;
+    my ( $self, $depth, $str ) = @_;
     # FIXME use String::Escape ?
 
     # remove vertical whitespace
-    $str =~ s/\n/\\n/g;
-    $str =~ s/\r/\\r/g;
+    $str =~ s/\n/\\n/smg;
+    $str =~ s/\r/\\r/smg;
 
     # reformat nonprintables
-    $str =~ s/(\P{IsPrint})/"\\x{" . sprintf("%x", ord($1)) . "}"/ge;
+    $str =~ s/ (\P{IsPrint}) /"\\x{" . sprintf("%x", ord($1)) . "}"/xsmge;
 
-    qq{"$str"};
+    return qq{"$str"};
 }
 
 sub format_undef {
     # uncoverable pod
-    "undef"
+    return 'undef';
 }
 
 1;
