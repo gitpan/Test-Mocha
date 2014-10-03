@@ -1,6 +1,6 @@
 package Test::Mocha::Types;
 # ABSTRACT: Internal type constraints
-$Test::Mocha::Types::VERSION = '0.60';
+$Test::Mocha::Types::VERSION = '0.60_01';  # TRIAL
 use Type::Library
   -base,
   -declare => qw(

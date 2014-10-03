@@ -1,6 +1,6 @@
 package Test::Mocha::Util;
 # ABSTRACT: Internal utility functions
-$Test::Mocha::Util::VERSION = '0.60';
+$Test::Mocha::Util::VERSION = '0.60_01';  # TRIAL
 use strict;
 use warnings;
 
@@ -42,9 +42,8 @@ sub find_caller {
 
     my $i = 1;
     while () {
-        ( $package, $file, $line ) = caller $i;
+        ( $package, $file, $line ) = caller $i++;
         last if $package ne 'UNIVERSAL::ref';
-        $i++;
     }
     return ( $file, $line );
 }

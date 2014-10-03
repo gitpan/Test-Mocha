@@ -1,6 +1,6 @@
 package Test::Mocha::MethodCall;
 # ABSTRACT: Objects to represent method calls
-$Test::Mocha::MethodCall::VERSION = '0.60';
+$Test::Mocha::MethodCall::VERSION = '0.60_01';  # TRIAL
 use strict;
 use warnings;
 use parent qw( Test::Mocha::Method );
@@ -21,8 +21,8 @@ sub invocant {
 }
 
 sub caller {  ## no critic (ProhibitBuiltinHomonyms)
-              # uncoverable pod
-    return @{ $_[0]->{caller} };
+                                  # uncoverable pod
+    return @{ $_[0]->{caller} };  # ($file, $line)
 }
 
 sub stringify_long {

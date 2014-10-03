@@ -1,6 +1,6 @@
 package Test::Mocha::CalledOk::Between;
 # ABSTRACT: Concrete subclass of CalledOk for verifying methods called 'between' a min and max number of times
-$Test::Mocha::CalledOk::Between::VERSION = '0.60';
+$Test::Mocha::CalledOk::Between::VERSION = '0.60_01';  # TRIAL
 use strict;
 use warnings;
 use parent 'Test::Mocha::CalledOk';

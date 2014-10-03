@@ -1,6 +1,6 @@
 package Test::Mocha::Verify;
 # ABSTRACT: Mock wrapper to verify method calls (DEPRECATED)
-$Test::Mocha::Verify::VERSION = '0.60';
+$Test::Mocha::Verify::VERSION = '0.60_01';  # TRIAL
 use strict;
 use warnings;
 

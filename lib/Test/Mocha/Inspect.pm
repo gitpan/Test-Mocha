@@ -1,6 +1,6 @@
 package Test::Mocha::Inspect;
 # ABSTRACT: Mock wrapper to inspect method calls
-$Test::Mocha::Inspect::VERSION = '0.60';
+$Test::Mocha::Inspect::VERSION = '0.60_01';  # TRIAL
 use strict;
 use warnings;
 

@@ -1,7 +1,7 @@
 package Test::Mocha::CalledOk;
 # ABSTRACT: Abstract base class for verifying method calls
 # Abstract class methods required of sub-classes: 'is' and 'stringify'
-$Test::Mocha::CalledOk::VERSION = '0.60';
+$Test::Mocha::CalledOk::VERSION = '0.60_01';  # TRIAL
 use strict;
 use warnings;
 

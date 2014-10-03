@@ -1,6 +1,6 @@
 package Test::Mocha::MethodStub;
 # ABSTRACT: Objects to represent stubbed methods with arguments and responses
-$Test::Mocha::MethodStub::VERSION = '0.60';
+$Test::Mocha::MethodStub::VERSION = '0.60_01';  # TRIAL
 use strict;
 use warnings;
 use parent qw( Test::Mocha::Method );
