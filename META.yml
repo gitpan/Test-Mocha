@@ -21,12 +21,14 @@ no_index:
   directory:
     - lib/Test/Mocha
 optional_features:
+  AuthorTests:
+    description: 'Modules required for author tests'
   MooseTypes:
     description: 'Support using Moose types as argument matchers'
 provides:
   Test::Mocha:
     file: lib/Test/Mocha.pm
-    version: 0.60_01
+    version: 0.60_02
 requires:
   Carp: 1.22
   Exporter: 0
@@ -48,70 +50,70 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Test-Mocha
   homepage: https://github.com/stevenl/Test-Mocha
   repository: https://github.com/stevenl/Test-Mocha.git
-version: 0.60_01
+version: 0.60_02
 x_Dist_Zilla:
   perl:
     version: 5.018000
   plugins:
     -
       class: Dist::Zilla::Plugin::GatherDir
-      name: GatherDir
+      name: '@Basic/GatherDir'
       version: 5.013
     -
       class: Dist::Zilla::Plugin::PruneCruft
-      name: PruneCruft
+      name: '@Basic/PruneCruft'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::ManifestSkip
+      name: '@Basic/ManifestSkip'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::MetaYAML
+      name: '@Basic/MetaYAML'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::License
+      name: '@Basic/License'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::Readme
+      name: '@Basic/Readme'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::ExtraTests
+      name: '@Basic/ExtraTests'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::ExecDir
+      name: '@Basic/ExecDir'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::ShareDir
+      name: '@Basic/ShareDir'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::MakeMaker
+      name: '@Basic/MakeMaker'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::Manifest
+      name: '@Basic/Manifest'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::TestRelease
+      name: '@Basic/TestRelease'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::ConfirmRelease
+      name: '@Basic/ConfirmRelease'
+      version: 5.013
+    -
+      class: Dist::Zilla::Plugin::UploadToCPAN
+      name: '@Basic/UploadToCPAN'
       version: 5.013
     -
       class: Dist::Zilla::Plugin::PruneFiles
       name: PruneFiles
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::ManifestSkip
-      name: '@Filter/ManifestSkip'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::MetaYAML
-      name: '@Filter/MetaYAML'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::License
-      name: '@Filter/License'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::Readme
-      name: '@Filter/Readme'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::ExtraTests
-      name: '@Filter/ExtraTests'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::ExecDir
-      name: '@Filter/ExecDir'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::ShareDir
-      name: '@Filter/ShareDir'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::MakeMaker
-      name: '@Filter/MakeMaker'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::Manifest
-      name: '@Filter/Manifest'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::TestRelease
-      name: '@Filter/TestRelease'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::ConfirmRelease
-      name: '@Filter/ConfirmRelease'
-      version: 5.013
-    -
-      class: Dist::Zilla::Plugin::UploadToCPAN
-      name: '@Filter/UploadToCPAN'
       version: 5.013
     -
       class: Dist::Zilla::Plugin::PkgVersion
@@ -129,6 +131,10 @@ x_Dist_Zilla:
       class: Dist::Zilla::Plugin::AutoPrereqs
       name: AutoPrereqs
       version: 5.013
+    -
+      class: Dist::Zilla::Plugin::OptionalFeature
+      name: AuthorTests
+      version: 0.007
     -
       class: Dist::Zilla::Plugin::OptionalFeature
       name: MooseTypes
@@ -188,9 +194,9 @@ x_Dist_Zilla:
       name: Test::Perl::Critic
       version: 2.112410
     -
-      class: Dist::Zilla::Plugin::MarkdownInRoot::WithMetaLinks
-      name: MarkdownInRoot::WithMetaLinks
-      version: 0.1.2
+      class: Dist::Zilla::Plugin::ReadmeAnyFromPod
+      name: ReadmePodInRoot
+      version: 0.131500
     -
       class: Dist::Zilla::Plugin::InstallGuide
       name: InstallGuide
@@ -204,7 +210,7 @@ x_Dist_Zilla:
           allow_dirty:
             - dist.ini
             - Changes
-            - README.md
+            - README.pod
           allow_dirty_match: []
           changelog: Changes
         Dist::Zilla::Role::Git::Repo:
@@ -222,7 +228,7 @@ x_Dist_Zilla:
           allow_dirty:
             - dist.ini
             - Changes
-            - README.md
+            - README.pod
           allow_dirty_match: []
           changelog: Changes
         Dist::Zilla::Role::Git::Repo:
@@ -235,7 +241,7 @@ x_Dist_Zilla:
         Dist::Zilla::Plugin::Git::Tag:
           branch: ~
           signed: 0
-          tag: v0.60_01
+          tag: v0.60_02
           tag_format: v%v
           tag_message: v%v
           time_zone: local
@@ -249,25 +255,10 @@ x_Dist_Zilla:
         Dist::Zilla::Plugin::Git::Push:
           push_to:
             - origin
-            - 'origin HEAD:refs/heads/release'
           remotes_must_exist: 1
         Dist::Zilla::Role::Git::Repo:
           repo_root: '.'
       name: '@Git/Push'
-      version: 2.024
-    -
-      class: Dist::Zilla::Plugin::Git::CommitBuild
-      config:
-        Dist::Zilla::Plugin::Git::CommitBuild:
-          branch: ''
-          build_root: ~
-          message: 'Build results of %h (on %b)'
-          multiple_inheritance: 0
-          release_branch: release
-          release_message: 'Release build of v%v (on %b)'
-        Dist::Zilla::Role::Git::Repo:
-          repo_root: '.'
-      name: Git::CommitBuild
       version: 2.024
     -
       class: Dist::Zilla::Plugin::FinderCode
@@ -304,5 +295,5 @@ x_Dist_Zilla:
   zilla:
     class: Dist::Zilla::Dist::Builder
     config:
-      is_trial: 1
+      is_trial: 0
     version: 5.013

@@ -1,6 +1,6 @@
 package Test::Mocha::Util;
 # ABSTRACT: Internal utility functions
-$Test::Mocha::Util::VERSION = '0.60_01';  # TRIAL
+$Test::Mocha::Util::VERSION = '0.60_02';
 use strict;
 use warnings;
 

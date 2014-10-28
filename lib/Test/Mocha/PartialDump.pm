@@ -1,6 +1,6 @@
 package Test::Mocha::PartialDump;
 # ABSTRACT: Partial dumping of data structures, optimized for argument printing
-$Test::Mocha::PartialDump::VERSION = '0.60_01';  # TRIAL
+$Test::Mocha::PartialDump::VERSION = '0.60_02';
 # ===================================================================
 # This code was copied and adapted from Devel::PartialDump 0.15.
 #

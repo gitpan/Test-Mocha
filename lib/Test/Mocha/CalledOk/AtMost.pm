@@ -1,6 +1,6 @@
 package Test::Mocha::CalledOk::AtMost;
 # ABSTRACT: Concrete subclass of CalledOk for verifying methods called 'atmost' number of times
-$Test::Mocha::CalledOk::AtMost::VERSION = '0.60_01';  # TRIAL
+$Test::Mocha::CalledOk::AtMost::VERSION = '0.60_02';
 use strict;
 use warnings;
 use parent 'Test::Mocha::CalledOk';

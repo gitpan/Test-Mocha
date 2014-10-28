@@ -31,8 +31,8 @@ on 'develop' => sub {
   requires "Moose::Util::TypeConstraints" => "0";
   requires "MooseX::Types::Moose" => "0";
   requires "MooseX::Types::Structured" => "0";
+  requires "Pod::Coverage::TrustPod" => "0";
   requires "Test::More" => "0";
   requires "Test::NoTabs" => "0";
   requires "Test::Pod" => "1.41";
-  requires "Type::Tiny::XS" => "0";
 };

@@ -1,6 +1,6 @@
 package Test::Mocha::MethodCall;
 # ABSTRACT: Objects to represent method calls
-$Test::Mocha::MethodCall::VERSION = '0.60_01';  # TRIAL
+$Test::Mocha::MethodCall::VERSION = '0.60_02';
 use strict;
 use warnings;
 use parent qw( Test::Mocha::Method );

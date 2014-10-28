@@ -1,6 +1,6 @@
 package Test::Mocha::Stub;
 # ABSTRACT: Mock wrapper to create method stubs
-$Test::Mocha::Stub::VERSION = '0.60_01';  # TRIAL
+$Test::Mocha::Stub::VERSION = '0.60_02';
 use strict;
 use warnings;
 

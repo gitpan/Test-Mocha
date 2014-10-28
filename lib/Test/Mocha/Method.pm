@@ -1,6 +1,6 @@
 package Test::Mocha::Method;
 # ABSTRACT: Objects to represent methods and their arguuments
-$Test::Mocha::Method::VERSION = '0.60_01';  # TRIAL
+$Test::Mocha::Method::VERSION = '0.60_02';
 use strict;
 use warnings;
 
